@@ -1,6 +1,8 @@
 "use client";
 
 import { Fragment, useState } from "react";
+import Link from "next/link";
+import useSWR from "swr";
 import {
   ChevronDown,
   CircleCheck,
@@ -21,11 +23,17 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
-import { MOCK_NOTIFICATION_LOGS } from "@/lib/mock-notifications";
+import { ApiError, getJson, sendJson } from "@/lib/api/http";
 import type {
   ChannelType,
+  NotificationLog,
   NotificationSendStatus,
 } from "@/types/notification";
+
+interface LogsResponse {
+  logs: NotificationLog[];
+  total: number;
+}
 
 type ChannelFilter = "all" | ChannelType;
 type StatusFilter = "all" | NotificationSendStatus;
@@ -81,23 +89,22 @@ function formatFullTime(iso: string) {
 }
 
 export default function NotificationHistory() {
-  const [expandedId, setExpandedId] = useState<string | null>(null);
-  // Stub: solusi disimpan di state lokal — nantinya PATCH ke backend.
-  const [solutions, setSolutions] = useState<Record<string, string>>(() =>
-    Object.fromEntries(
-      MOCK_NOTIFICATION_LOGS.filter((log) => log.resolutionNote).map((log) => [
-        log.id,
-        log.resolutionNote as string,
-      ]),
-    ),
+  const { data, error, mutate } = useSWR(
+    "/api/notifications/logs?limit=100",
+    getJson<LogsResponse>,
+    { revalidateOnFocus: false },
   );
+  const allLogs = data?.logs ?? [];
+
+  const [expandedId, setExpandedId] = useState<string | null>(null);
   const [draft, setDraft] = useState("");
+  const [saving, setSaving] = useState(false);
   const [query, setQuery] = useState("");
   const [channelFilter, setChannelFilter] = useState<ChannelFilter>("all");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
 
   const normalizedQuery = query.trim().toLowerCase();
-  const filteredLogs = MOCK_NOTIFICATION_LOGS.filter((log) => {
+  const filteredLogs = allLogs.filter((log) => {
     if (channelFilter !== "all" && log.alertType !== channelFilter)
       return false;
     if (statusFilter !== "all" && log.status !== statusFilter) return false;
@@ -111,13 +118,40 @@ export default function NotificationHistory() {
   function toggleRow(id: string) {
     setExpandedId((current) => {
       const next = current === id ? null : id;
-      if (next) setDraft(solutions[next] ?? "");
+      if (next) {
+        const log = allLogs.find((item) => item.id === next);
+        setDraft(log?.resolutionNote ?? "");
+      }
       return next;
     });
   }
 
-  function saveSolution(id: string) {
-    setSolutions((current) => ({ ...current, [id]: draft.trim() }));
+  async function saveSolution(id: string) {
+    setSaving(true);
+    try {
+      await sendJson("PATCH", `/api/notifications/logs/${id}`, {
+        resolutionNote: draft.trim(),
+      });
+      await mutate();
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  if (error instanceof ApiError && error.status === 401) {
+    return (
+      <div className="rounded-lg border bg-card">
+        <div className="border-b px-4 py-3">
+          <p className="text-sm font-medium">Riwayat Notifikasi</p>
+        </div>
+        <p className="px-4 py-8 text-center text-sm text-muted-foreground">
+          <Link href="/login" className="text-foreground hover:underline">
+            Masuk
+          </Link>{" "}
+          untuk melihat riwayat notifikasi.
+        </p>
+      </div>
+    );
   }
 
   return (
@@ -126,8 +160,8 @@ export default function NotificationHistory() {
         <div>
           <p className="text-sm font-medium">Riwayat Notifikasi</p>
           <p className="text-xs text-muted-foreground">
-            {filteredLogs.length} dari {MOCK_NOTIFICATION_LOGS.length} alert ·
-            klik baris untuk detail &amp; solusi
+            {filteredLogs.length} dari {allLogs.length} alert · klik baris
+            untuk detail &amp; solusi
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -188,7 +222,7 @@ export default function NotificationHistory() {
           )}
           {filteredLogs.map((log) => {
             const isExpanded = expandedId === log.id;
-            const hasSolution = Boolean(solutions[log.id]);
+            const hasSolution = Boolean(log.resolutionNote);
             return (
               <Fragment key={log.id}>
                 <TableRow
@@ -287,9 +321,9 @@ export default function NotificationHistory() {
                                 event.stopPropagation();
                                 saveSolution(log.id);
                               }}
-                              disabled={draft.trim() === ""}
+                              disabled={draft.trim() === "" || saving}
                             >
-                              Simpan Solusi
+                              {saving ? "Menyimpan…" : "Simpan Solusi"}
                             </Button>
                             {hasSolution && (
                               <span className="text-[11px] text-muted-foreground">

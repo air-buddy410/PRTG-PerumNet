@@ -6,6 +6,7 @@ import { CircleCheck } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { ApiError, sendJson } from "@/lib/api/http";
 
 export default function RegisterForm() {
   const [name, setName] = useState("");
@@ -13,9 +14,10 @@ export default function RegisterForm() {
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
-  function handleSubmit(event: React.FormEvent) {
+  async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
     if (password.length < 8) {
       setError("Kata sandi minimal 8 karakter.");
@@ -26,19 +28,36 @@ export default function RegisterForm() {
       return;
     }
     setError(null);
-    // Stub: nantinya memanggil API pendaftaran (Better Auth).
-    setSubmitted(true);
+    setSubmitting(true);
+    try {
+      await sendJson("POST", "/api/auth/sign-up/email", {
+        name,
+        email,
+        password,
+      });
+      setSubmitted(true);
+    } catch (err) {
+      setError(
+        err instanceof ApiError && err.status === 422
+          ? "Email tersebut sudah terdaftar."
+          : err instanceof Error
+            ? err.message
+            : "Pendaftaran gagal.",
+      );
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   if (submitted) {
     return (
       <div className="flex flex-col items-center gap-3 text-center">
         <CircleCheck className="size-10 text-[#0ca30c]" aria-hidden />
-        <p className="text-sm font-medium">Pendaftaran berhasil (tiruan)</p>
+        <p className="text-sm font-medium">Pendaftaran berhasil</p>
         <p className="text-xs text-muted-foreground">
           Akun <span className="text-foreground">{email}</span> dibuat dengan
-          peran <span className="text-foreground">Engineer</span> dan menunggu
-          persetujuan Admin NOC.
+          peran <span className="text-foreground">Engineer</span>. Admin NOC
+          dapat mengubah peran Anda di halaman Pengguna.
         </p>
         <Link
           href="/login"
@@ -98,8 +117,8 @@ export default function RegisterForm() {
 
       {error && <p className="text-xs text-[#d03b3b]">{error}</p>}
 
-      <Button type="submit" className="mt-1">
-        Daftar
+      <Button type="submit" disabled={submitting} className="mt-1">
+        {submitting ? "Mendaftarkan…" : "Daftar"}
       </Button>
       <p className="text-center text-xs text-muted-foreground">
         Sudah punya akun?{" "}

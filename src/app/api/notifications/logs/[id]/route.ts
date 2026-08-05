@@ -3,14 +3,18 @@ import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import { notificationLogs } from "@/db/schema";
 import { getLogById } from "@/server/notification-logs";
+import { withRole } from "@/server/rbac";
 
 export const dynamic = "force-dynamic";
 
+type LogRouteContext = { params: Promise<{ id: string }> };
+
 /** GET /api/notifications/logs/:id — detail satu entri riwayat notifikasi. */
-export async function GET(
-  _request: Request,
-  { params }: { params: Promise<{ id: string }> },
-) {
+export const GET = withRole<LogRouteContext>([], async (
+  _request,
+  _user,
+  { params },
+) => {
   const { id } = await params;
   const log = getLogById(id);
   if (!log) {
@@ -20,17 +24,18 @@ export async function GET(
     );
   }
   return NextResponse.json({ log });
-}
+});
 
 /**
  * PATCH /api/notifications/logs/:id
  * Memperbarui catatan solusi/tindak lanjut sebuah log.
  * Body: { "resolutionNote": string } — string kosong menghapus catatan.
  */
-export async function PATCH(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> },
-) {
+export const PATCH = withRole<LogRouteContext>([], async (
+  request,
+  _user,
+  { params },
+) => {
   const { id } = await params;
 
   let body: { resolutionNote?: unknown };
@@ -64,4 +69,4 @@ export async function PATCH(
     .run();
 
   return NextResponse.json({ log: getLogById(id) });
-}
+});

@@ -1,10 +1,12 @@
 "use client";
 
 import { useState } from "react";
+import { useSWRConfig } from "swr";
 import { MessageCircle, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { ApiError, sendJson } from "@/lib/api/http";
 import type { ChannelType } from "@/types/notification";
 
 const BOT_TARGET: Record<ChannelType, { label: string; contact: string }> = {
@@ -20,25 +22,48 @@ interface PendingRegistration {
 }
 
 export default function RegisterChannelForm() {
+  const { mutate } = useSWRConfig();
   const [type, setType] = useState<ChannelType>("telegram");
   const [recipientName, setRecipientName] = useState("");
   const [target, setTarget] = useState("");
   const [pending, setPending] = useState<PendingRegistration | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
-  const canSubmit = recipientName.trim() !== "" && target.trim() !== "";
+  const canSubmit =
+    recipientName.trim() !== "" && target.trim() !== "" && !submitting;
 
-  function handleSubmit(event: React.FormEvent) {
+  async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
     if (!canSubmit) return;
-    // Stub: kode verifikasi nantinya diterbitkan backend & dicocokkan bot.
-    const code = String(Math.floor(100000 + Math.random() * 900000));
-    setPending({ type, recipientName, target, code });
+    setSubmitting(true);
+    setError(null);
+    try {
+      const result = await sendJson<{ verificationCode: string }>(
+        "POST",
+        "/api/notifications/channels",
+        { type, recipientName, target },
+      );
+      setPending({ type, recipientName, target, code: result.verificationCode });
+      mutate("/api/notifications/channels");
+    } catch (err) {
+      setError(
+        err instanceof ApiError && err.status === 401
+          ? "Masuk dulu untuk mendaftarkan channel."
+          : err instanceof Error
+            ? err.message
+            : "Pendaftaran gagal.",
+      );
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   function resetForm() {
     setPending(null);
     setRecipientName("");
     setTarget("");
+    setError(null);
   }
 
   if (pending) {
@@ -128,8 +153,10 @@ export default function RegisterChannelForm() {
           />
         </div>
 
+        {error && <p className="text-xs text-[#d03b3b]">{error}</p>}
+
         <Button type="submit" disabled={!canSubmit} className="mt-auto">
-          Daftarkan &amp; Minta Kode Verifikasi
+          {submitting ? "Mendaftarkan…" : "Daftarkan & Minta Kode Verifikasi"}
         </Button>
       </div>
     </form>

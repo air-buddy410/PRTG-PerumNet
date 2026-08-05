@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
+import useSWR from "swr";
 import {
   CartesianGrid,
   Line,
@@ -10,15 +11,20 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { getJson } from "@/lib/api/http";
 import {
   CHART_GRID_DARK,
   CHART_INK_MUTED,
   CHART_SLOT_1,
 } from "@/lib/chart-colors";
-import {
-  generateHistorySeries,
-  type HistoryMetric,
-} from "@/lib/mock-metrics";
+import type { HistoryMetric, HistoryPoint } from "@/lib/mock-metrics";
+
+interface HistoryResponse {
+  metric: HistoryMetric;
+  hours: number;
+  points: HistoryPoint[];
+  updatedAt: string;
+}
 
 const METRICS: { key: HistoryMetric; label: string; unit: string }[] = [
   { key: "cpu", label: "CPU", unit: "%" },
@@ -68,10 +74,12 @@ export default function HistoryChart({ deviceId }: { deviceId: string }) {
   const [hours, setHours] = useState(24);
 
   const meta = METRICS.find((item) => item.key === metric)!;
-  const data = useMemo(
-    () => generateHistorySeries(deviceId, metric, hours),
-    [deviceId, metric, hours],
+  const { data: history } = useSWR(
+    `/api/devices/${deviceId}/metrics-history?metric=${metric}&hours=${hours}`,
+    getJson<HistoryResponse>,
+    { revalidateOnFocus: false },
   );
+  const data = history?.points ?? [];
 
   return (
     <div className="rounded-lg border bg-card">

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { listLogs, type LogFilters } from "@/server/notification-logs";
+import { withRole } from "@/server/rbac";
 
 export const dynamic = "force-dynamic";
 
@@ -11,7 +12,7 @@ const MAX_LIMIT = 200;
  * Riwayat alert (terbaru dulu), disaring di SQL, dengan paginasi.
  * `total` = jumlah baris cocok filter tanpa paginasi.
  */
-export async function GET(request: Request) {
+export const GET = withRole([], async (request) => {
   const { searchParams } = new URL(request.url);
   const channel = searchParams.get("channel");
   const status = searchParams.get("status");
@@ -54,4 +55,4 @@ export async function GET(request: Request) {
   });
 
   return NextResponse.json(page);
-}
+});

@@ -1,74 +1,73 @@
 "use client";
 
 import { useState } from "react";
-import { Laptop, Smartphone, Tv } from "lucide-react";
+import Link from "next/link";
+import useSWR from "swr";
+import { Laptop, Smartphone } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useSession } from "@/hooks/use-session";
+import { ApiError, getJson, sendJson } from "@/lib/api/http";
 
-interface LoginSession {
-  id: string;
-  device: string;
-  kind: "desktop" | "mobile" | "wallboard";
-  ip: string;
-  location: string;
-  lastActive: string;
-  isCurrent: boolean;
+interface AuthSession {
+  token: string;
+  ipAddress?: string | null;
+  userAgent?: string | null;
+  updatedAt: string;
+  expiresAt: string;
 }
 
-// Data tiruan sesi login — nantinya dari tabel sessions (Better Auth).
-const MOCK_SESSIONS: LoginSession[] = [
-  {
-    id: "sess-01",
-    device: "Chrome · macOS",
-    kind: "desktop",
-    ip: "10.10.1.25",
-    location: "Kantor NOC, Jakarta",
-    lastActive: "Aktif sekarang",
-    isCurrent: true,
-  },
-  {
-    id: "sess-02",
-    device: "TV Wallboard · Chromium Kiosk",
-    kind: "wallboard",
-    ip: "10.10.1.60",
-    location: "Ruang Kontrol NOC",
-    lastActive: "Aktif sekarang",
-    isCurrent: false,
-  },
-  {
-    id: "sess-03",
-    device: "Safari · iPhone",
-    kind: "mobile",
-    ip: "182.253.44.101",
-    location: "Jakarta Selatan",
-    lastActive: "2 jam lalu",
-    isCurrent: false,
-  },
-  {
-    id: "sess-04",
-    device: "Firefox · Windows",
-    kind: "desktop",
-    ip: "36.68.12.7",
-    location: "Bekasi",
-    lastActive: "Kemarin, 21.14",
-    isCurrent: false,
-  },
-];
-
-const KIND_ICON = { desktop: Laptop, mobile: Smartphone, wallboard: Tv };
+function describeAgent(userAgent: string | null | undefined) {
+  if (!userAgent) return { label: "Perangkat tidak dikenal", mobile: false };
+  const mobile = /iphone|android|mobile/i.test(userAgent);
+  const browser =
+    /firefox/i.test(userAgent) ? "Firefox"
+    : /edg/i.test(userAgent) ? "Edge"
+    : /chrome|chromium/i.test(userAgent) ? "Chrome"
+    : /safari/i.test(userAgent) ? "Safari"
+    : "Browser";
+  const os =
+    /mac os/i.test(userAgent) ? "macOS"
+    : /windows/i.test(userAgent) ? "Windows"
+    : /iphone|ipad/i.test(userAgent) ? "iOS"
+    : /android/i.test(userAgent) ? "Android"
+    : /linux/i.test(userAgent) ? "Linux"
+    : "OS lain";
+  return { label: `${browser} · ${os}`, mobile };
+}
 
 export default function SessionList() {
-  const [sessions, setSessions] = useState(MOCK_SESSIONS);
+  const { session } = useSession();
+  const { data: sessions, error, mutate } = useSWR(
+    "/api/auth/list-sessions",
+    getJson<AuthSession[]>,
+    { revalidateOnFocus: false },
+  );
+  const [busy, setBusy] = useState(false);
 
-  function revoke(id: string) {
-    // Stub: nantinya DELETE sesi ke backend.
-    setSessions((current) => current.filter((session) => session.id !== id));
+  const currentToken = session?.session.token;
+
+  async function revoke(token: string) {
+    setBusy(true);
+    try {
+      await sendJson("POST", "/api/auth/revoke-session", { token });
+      await mutate();
+    } finally {
+      setBusy(false);
+    }
   }
 
-  function revokeOthers() {
-    setSessions((current) => current.filter((session) => session.isCurrent));
+  async function revokeOthers() {
+    setBusy(true);
+    try {
+      await sendJson("POST", "/api/auth/revoke-other-sessions", {});
+      await mutate();
+    } finally {
+      setBusy(false);
+    }
   }
 
-  const hasOthers = sessions.some((session) => !session.isCurrent);
+  const rows = sessions ?? [];
+  const hasOthers = rows.some((item) => item.token !== currentToken);
 
   return (
     <div className="rounded-lg border bg-card lg:col-span-2">
@@ -78,52 +77,76 @@ export default function SessionList() {
           variant="outline"
           size="sm"
           onClick={revokeOthers}
-          disabled={!hasOthers}
+          disabled={!hasOthers || busy}
         >
           Putuskan Semua Sesi Lain
         </Button>
       </div>
-      <ul className="divide-y">
-        {sessions.map((session) => {
-          const Icon = KIND_ICON[session.kind];
-          return (
-            <li
-              key={session.id}
-              className="flex items-center justify-between gap-3 px-4 py-3"
-            >
-              <div className="flex items-center gap-3">
-                <span className="flex size-8 items-center justify-center rounded-full border text-muted-foreground">
-                  <Icon className="size-4" aria-hidden />
-                </span>
-                <div>
-                  <p className="text-sm font-medium">
-                    {session.device}
-                    {session.isCurrent && (
-                      <span className="ml-2 rounded-full bg-[#0ca30c]/15 px-2 py-0.5 text-[11px] font-medium text-[#0ca30c]">
-                        Sesi ini
-                      </span>
-                    )}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    <span className="font-mono">{session.ip}</span> ·{" "}
-                    {session.location} · {session.lastActive}
-                  </p>
+      {error instanceof ApiError && error.status === 401 ? (
+        <p className="px-4 py-8 text-center text-sm text-muted-foreground">
+          <Link href="/login" className="text-foreground hover:underline">
+            Masuk
+          </Link>{" "}
+          untuk melihat sesi aktif.
+        </p>
+      ) : !sessions ? (
+        <p className="px-4 py-8 text-center text-sm text-muted-foreground">
+          Memuat sesi…
+        </p>
+      ) : (
+        <ul className="divide-y">
+          {rows.map((item) => {
+            const { label, mobile } = describeAgent(item.userAgent);
+            const Icon = mobile ? Smartphone : Laptop;
+            const isCurrent = item.token === currentToken;
+            return (
+              <li
+                key={item.token}
+                className="flex items-center justify-between gap-3 px-4 py-3"
+              >
+                <div className="flex items-center gap-3">
+                  <span className="flex size-8 items-center justify-center rounded-full border text-muted-foreground">
+                    <Icon className="size-4" aria-hidden />
+                  </span>
+                  <div>
+                    <p className="text-sm font-medium">
+                      {label}
+                      {isCurrent && (
+                        <span className="ml-2 rounded-full bg-[#0ca30c]/15 px-2 py-0.5 text-[11px] font-medium text-[#0ca30c]">
+                          Sesi ini
+                        </span>
+                      )}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {item.ipAddress ? (
+                        <span className="font-mono">{item.ipAddress}</span>
+                      ) : (
+                        "IP tidak tercatat"
+                      )}{" "}
+                      · berlaku sampai{" "}
+                      {new Date(item.expiresAt).toLocaleDateString("id-ID", {
+                        day: "2-digit",
+                        month: "short",
+                      })}
+                    </p>
+                  </div>
                 </div>
-              </div>
-              {!session.isCurrent && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="text-[#d03b3b] hover:text-[#d03b3b]"
-                  onClick={() => revoke(session.id)}
-                >
-                  Putuskan
-                </Button>
-              )}
-            </li>
-          );
-        })}
-      </ul>
+                {!isCurrent && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-[#d03b3b] hover:text-[#d03b3b]"
+                    disabled={busy}
+                    onClick={() => revoke(item.token)}
+                  >
+                    Putuskan
+                  </Button>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+      )}
     </div>
   );
 }

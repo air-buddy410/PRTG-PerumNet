@@ -7,10 +7,10 @@ import { CircleAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { ApiError, sendJson } from "@/lib/api/http";
 
-// Kredensial demo stub — nantinya diganti Better Auth.
-const DEMO_EMAIL = "admin@perumnet.co.id";
-const DEMO_PASSWORD = "perumnet123";
+// Akun bootstrap bawaan (lihat src/server/bootstrap-admin.ts).
+const DEMO_HINT = "admin@perumnet.co.id / perumnet123";
 
 export default function LoginForm() {
   const router = useRouter();
@@ -19,21 +19,24 @@ export default function LoginForm() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  function handleSubmit(event: React.FormEvent) {
+  async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
     setLoading(true);
     setError(null);
-    // Stub: simulasi panggilan API login.
-    setTimeout(() => {
-      if (email === DEMO_EMAIL && password === DEMO_PASSWORD) {
-        router.push("/dashboard");
-      } else {
-        setError(
-          "Email atau kata sandi salah. Periksa kembali kredensial Anda.",
-        );
-        setLoading(false);
-      }
-    }, 400);
+    try {
+      await sendJson("POST", "/api/auth/sign-in/email", { email, password });
+      router.push("/dashboard");
+      router.refresh();
+    } catch (err) {
+      setError(
+        err instanceof ApiError && err.status === 401
+          ? "Email atau kata sandi salah. Periksa kembali kredensial Anda."
+          : err instanceof Error
+            ? err.message
+            : "Gagal masuk.",
+      );
+      setLoading(false);
+    }
   }
 
   return (
@@ -79,7 +82,7 @@ export default function LoginForm() {
         </Link>
       </p>
       <p className="rounded-md border border-dashed px-3 py-2 text-center text-[11px] text-muted-foreground">
-        Demo: {DEMO_EMAIL} / {DEMO_PASSWORD}
+        Demo: {DEMO_HINT}
       </p>
     </form>
   );

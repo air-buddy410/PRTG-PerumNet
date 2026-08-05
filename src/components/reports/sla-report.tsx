@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import useSWR from "swr";
 import { CircleCheck, TriangleAlert } from "lucide-react";
 import {
   Table,
@@ -10,21 +10,35 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  formatDowntime,
-  generateSlaReport,
-  SLA_TARGET_PERCENT,
-} from "@/lib/mock-reports";
+import { getJson } from "@/lib/api/http";
+import { formatDowntime } from "@/lib/mock-reports";
+import type { DeviceGroup } from "@/types/device";
+
+interface SlaRow {
+  deviceId: string;
+  deviceName: string;
+  group: DeviceGroup;
+  area: string;
+  uptimePercent: number;
+  downtimeMinutes: number;
+  incidents: number;
+  meetsTarget: boolean;
+}
+
+interface SlaResponse {
+  period: string;
+  targetPercent: number;
+  rows: SlaRow[];
+  summary: { devices: number; averageUptime: number; belowTarget: number };
+}
 
 export default function SlaReport({ period }: { period: string }) {
-  const rows = useMemo(() => generateSlaReport(period), [period]);
-
-  const averageUptime =
-    Math.round(
-      (rows.reduce((sum, row) => sum + row.uptimePercent, 0) / rows.length) *
-        100,
-    ) / 100;
-  const belowTarget = rows.filter((row) => !row.meetsTarget).length;
+  const { data } = useSWR(
+    `/api/reports/sla?period=${period}`,
+    getJson<SlaResponse>,
+    { revalidateOnFocus: false },
+  );
+  const rows = data?.rows ?? [];
 
   return (
     <div className="rounded-lg border bg-card">
@@ -32,15 +46,21 @@ export default function SlaReport({ period }: { period: string }) {
         <p className="text-sm font-medium">
           Laporan Ketersediaan SLA{" "}
           <span className="text-xs font-normal text-muted-foreground">
-            target ≥ {SLA_TARGET_PERCENT}%
+            target ≥ {data?.targetPercent ?? 99.5}%
           </span>
         </p>
         <p className="text-xs text-muted-foreground">
-          Rata-rata uptime{" "}
-          <span className="font-medium tabular-nums text-foreground">
-            {averageUptime}%
-          </span>{" "}
-          · {belowTarget} perangkat di bawah target
+          {data ? (
+            <>
+              Rata-rata uptime{" "}
+              <span className="font-medium tabular-nums text-foreground">
+                {data.summary.averageUptime}%
+              </span>{" "}
+              · {data.summary.belowTarget} perangkat di bawah target
+            </>
+          ) : (
+            "Memuat laporan…"
+          )}
         </p>
       </div>
       <Table>

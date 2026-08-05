@@ -1,26 +1,73 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { CircleCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { MOCK_USERS } from "@/lib/mock-users";
+import { useSession } from "@/hooks/use-session";
+import { sendJson } from "@/lib/api/http";
 import { ROLE_LABELS } from "@/types/user";
 
-// Stub: pengguna aktif = admin pertama; nantinya dari sesi Better Auth.
-const CURRENT_USER = MOCK_USERS[0];
-
 export default function ProfileForm() {
-  const [name, setName] = useState(CURRENT_USER.name);
-  const [email, setEmail] = useState(CURRENT_USER.email);
+  const { session, isLoading, mutate } = useSession();
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
   const [saved, setSaved] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  function handleSubmit(event: React.FormEvent) {
+  // Prefill sekali per sesi login (pola "adjust state during render").
+  const [initializedFor, setInitializedFor] = useState<string | null>(null);
+  if (session && initializedFor !== session.user.id) {
+    setInitializedFor(session.user.id);
+    setName(session.user.name);
+    setEmail(session.user.email);
+  }
+
+  async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
-    // Stub: nantinya PATCH profil ke backend.
-    setSaved(true);
-    setTimeout(() => setSaved(false), 3000);
+    if (!session) return;
+    setSaving(true);
+    setError(null);
+    setSaved(false);
+    try {
+      if (name.trim() !== session.user.name) {
+        await sendJson("POST", "/api/auth/update-user", { name: name.trim() });
+      }
+      if (email.trim().toLowerCase() !== session.user.email) {
+        await sendJson("PATCH", "/api/profile/email", { email: email.trim() });
+      }
+      await mutate();
+      setSaved(true);
+      setTimeout(() => setSaved(false), 3000);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Gagal menyimpan profil.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex h-full min-h-56 items-center justify-center rounded-lg border bg-card text-sm text-muted-foreground">
+        Memuat profil…
+      </div>
+    );
+  }
+
+  if (!session) {
+    return (
+      <div className="flex h-full min-h-56 items-center justify-center rounded-lg border bg-card text-sm text-muted-foreground">
+        <p>
+          <Link href="/login" className="text-foreground hover:underline">
+            Masuk
+          </Link>{" "}
+          untuk mengelola profil.
+        </p>
+      </div>
+    );
   }
 
   return (
@@ -31,7 +78,7 @@ export default function ProfileForm() {
       <div className="flex items-center justify-between border-b px-4 py-3">
         <p className="text-sm font-medium">Data Profil</p>
         <span className="rounded-full border px-2 py-0.5 text-[11px] font-medium">
-          {ROLE_LABELS[CURRENT_USER.role]}
+          {ROLE_LABELS[session.user.role]}
         </span>
       </div>
       <div className="flex flex-1 flex-col gap-4 px-4 py-4">
@@ -55,12 +102,16 @@ export default function ProfileForm() {
           />
         </div>
 
+        {error && <p className="text-xs text-[#d03b3b]">{error}</p>}
+
         <div className="mt-auto flex items-center gap-3">
-          <Button type="submit">Simpan Perubahan</Button>
+          <Button type="submit" disabled={saving}>
+            {saving ? "Menyimpan…" : "Simpan Perubahan"}
+          </Button>
           {saved && (
             <span className="flex items-center gap-1 text-xs font-medium text-[#0ca30c]">
               <CircleCheck className="size-3.5" aria-hidden />
-              Profil tersimpan (tiruan)
+              Profil tersimpan
             </span>
           )}
         </div>

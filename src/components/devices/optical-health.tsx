@@ -1,13 +1,20 @@
 "use client";
 
-import { useMemo } from "react";
+import useSWR from "swr";
 import { CircleCheck, CircleX, Zap } from "lucide-react";
+import { DEVICES_REFRESH_INTERVAL_MS } from "@/hooks/use-devices";
+import { getJson } from "@/lib/api/http";
 import {
-  generateOpticalHealth,
   RX_POWER_CRITICAL,
   RX_POWER_LOW,
   type OnuStatus,
+  type PonPortHealth,
 } from "@/lib/mock-metrics";
+
+interface OltOpticsResponse {
+  ports: PonPortHealth[];
+  updatedAt: string;
+}
 
 // Status palette dataviz — ikon + label selalu menyertai warna.
 const ONU_STATUS: Record<
@@ -26,7 +33,16 @@ function rxPowerColor(rxPower: number): string | undefined {
 }
 
 export default function OpticalHealth({ deviceId }: { deviceId: string }) {
-  const ports = useMemo(() => generateOpticalHealth(deviceId), [deviceId]);
+  const { data } = useSWR(
+    `/api/devices/${deviceId}/olt-optics`,
+    getJson<OltOpticsResponse>,
+    {
+      refreshInterval: DEVICES_REFRESH_INTERVAL_MS,
+      refreshWhenHidden: true,
+      revalidateOnFocus: false,
+    },
+  );
+  const ports = data?.ports ?? [];
 
   return (
     <div className="rounded-lg border bg-card">
@@ -39,6 +55,11 @@ export default function OpticalHealth({ deviceId }: { deviceId: string }) {
           dBm
         </p>
       </div>
+      {ports.length === 0 && (
+        <p className="px-4 py-8 text-center text-sm text-muted-foreground">
+          Memuat data optik…
+        </p>
+      )}
       <div className="grid gap-4 p-4 md:grid-cols-2 xl:grid-cols-4">
         {ports.map((pon) => (
           <div key={pon.port} className="rounded-md border bg-background/40">

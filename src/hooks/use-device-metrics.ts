@@ -10,7 +10,7 @@ import type { DeviceGroup } from "@/types/device";
 export function useDeviceMetrics(deviceId: string, group: DeviceGroup) {
   const { data, error, isLoading } = useSWR(
     ["device-metrics", deviceId, group],
-    ([, id, deviceGroup]) => fetchDeviceMetrics(id, deviceGroup as DeviceGroup),
+    ([, id]) => fetchDeviceMetrics(id),
     {
       refreshInterval: DEVICES_REFRESH_INTERVAL_MS,
       refreshWhenHidden: true,

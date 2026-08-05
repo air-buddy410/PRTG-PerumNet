@@ -3,13 +3,15 @@
 import { useRouter } from "next/navigation";
 import { LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { sendJson } from "@/lib/api/http";
 
 export default function LogoutButton() {
   const router = useRouter();
 
-  function handleLogout() {
-    // Stub: nantinya memanggil API logout (Better Auth) & menghapus sesi.
+  async function handleLogout() {
+    await sendJson("POST", "/api/auth/sign-out", {}).catch(() => null);
     router.push("/login");
+    router.refresh();
   }
 
   return (

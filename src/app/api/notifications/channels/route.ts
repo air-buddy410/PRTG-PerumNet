@@ -1,10 +1,30 @@
 import { randomUUID } from "node:crypto";
 import { NextResponse } from "next/server";
-import { and, eq } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import { db } from "@/db";
 import { notificationChannels } from "@/db/schema";
+import { withRole } from "@/server/rbac";
 
 export const dynamic = "force-dynamic";
+
+/** GET /api/notifications/channels — daftar channel terdaftar (perlu login). */
+export const GET = withRole([], async () => {
+  const channels = db
+    .select({
+      id: notificationChannels.id,
+      type: notificationChannels.type,
+      recipientName: notificationChannels.recipientName,
+      target: notificationChannels.target,
+      verified: notificationChannels.verified,
+      active: notificationChannels.active,
+      createdAt: notificationChannels.createdAt,
+    })
+    .from(notificationChannels)
+    .orderBy(desc(notificationChannels.createdAt))
+    .all();
+
+  return NextResponse.json({ channels, total: channels.length });
+});
 
 const VALID_TYPES = ["telegram", "whatsapp"] as const;
 type ChannelType = (typeof VALID_TYPES)[number];
@@ -20,7 +40,7 @@ interface RegisterBody {
  * Mendaftarkan channel bot baru dan menerbitkan kode verifikasi 6 digit.
  * Channel berstatus belum-terverifikasi sampai kode dikonfirmasi bot.
  */
-export async function POST(request: Request) {
+export const POST = withRole([], async (request) => {
   let body: RegisterBody;
   try {
     body = await request.json();
@@ -91,4 +111,4 @@ export async function POST(request: Request) {
     },
     { status: 201 },
   );
-}
+});

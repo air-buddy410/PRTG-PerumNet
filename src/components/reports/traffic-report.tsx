@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import useSWR from "swr";
 import {
   Table,
   TableBody,
@@ -9,27 +9,54 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { formatVolume, generateTrafficReport } from "@/lib/mock-reports";
+import { getJson } from "@/lib/api/http";
+import { formatVolume } from "@/lib/mock-reports";
+import type { DeviceGroup } from "@/types/device";
+
+interface TrafficRow {
+  deviceId: string;
+  deviceName: string;
+  group: DeviceGroup;
+  area: string;
+  downloadGb: number;
+  uploadGb: number;
+  avgMbps: number;
+  peakMbps: number;
+}
+
+interface TrafficResponse {
+  period: string;
+  rows: TrafficRow[];
+  summary: { devices: number; totalDownloadGb: number; totalUploadGb: number };
+}
 
 export default function TrafficReport({ period }: { period: string }) {
-  const rows = useMemo(() => generateTrafficReport(period), [period]);
-
-  const totalDownload = rows.reduce((sum, row) => sum + row.downloadGB, 0);
-  const totalUpload = rows.reduce((sum, row) => sum + row.uploadGB, 0);
+  const { data } = useSWR(
+    `/api/reports/traffic?period=${period}`,
+    getJson<TrafficResponse>,
+    { revalidateOnFocus: false },
+  );
+  const rows = data?.rows ?? [];
 
   return (
     <div className="rounded-lg border bg-card">
       <div className="flex flex-wrap items-center justify-between gap-2 border-b px-4 py-3">
         <p className="text-sm font-medium">Laporan Penggunaan Trafik</p>
         <p className="text-xs text-muted-foreground">
-          Total download{" "}
-          <span className="font-medium tabular-nums text-foreground">
-            {formatVolume(totalDownload)}
-          </span>{" "}
-          · upload{" "}
-          <span className="font-medium tabular-nums text-foreground">
-            {formatVolume(totalUpload)}
-          </span>
+          {data ? (
+            <>
+              Total download{" "}
+              <span className="font-medium tabular-nums text-foreground">
+                {formatVolume(data.summary.totalDownloadGb)}
+              </span>{" "}
+              · upload{" "}
+              <span className="font-medium tabular-nums text-foreground">
+                {formatVolume(data.summary.totalUploadGb)}
+              </span>
+            </>
+          ) : (
+            "Memuat laporan…"
+          )}
         </p>
       </div>
       <Table>
@@ -57,10 +84,10 @@ export default function TrafficReport({ period }: { period: string }) {
                 {row.area}
               </TableCell>
               <TableCell className="text-right text-xs font-semibold tabular-nums">
-                {formatVolume(row.downloadGB)}
+                {formatVolume(row.downloadGb)}
               </TableCell>
               <TableCell className="text-right text-xs tabular-nums text-muted-foreground">
-                {formatVolume(row.uploadGB)}
+                {formatVolume(row.uploadGb)}
               </TableCell>
               <TableCell className="text-right text-xs tabular-nums text-muted-foreground">
                 {row.avgMbps} Mbps
