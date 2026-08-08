@@ -16,7 +16,7 @@ import { notificationChannels, notificationLogs } from "@/db/schema";
 type ChannelRow = typeof notificationChannels.$inferSelect;
 
 export interface AlertPayload {
-  prtgSensorId: string;
+  librenmsAlertId: string;
   deviceName: string;
   message: string;
 }
@@ -129,7 +129,7 @@ export async function dispatchAlert(
     db.insert(notificationLogs)
       .values({
         id: logId,
-        prtgSensorId: payload.prtgSensorId,
+        librenmsAlertId: payload.librenmsAlertId,
         deviceName: payload.deviceName,
         alertType: channel.type,
         messageContent: payload.message,

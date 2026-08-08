@@ -1,6 +1,12 @@
-// Skema database aplikasi (SQLite + Drizzle) — mengikuti PRD §6.
-// Riwayat metrik panjang tetap tanggung jawab PRTG; tabel metrik di sini
-// menyimpan sampel terbaru untuk kebutuhan tampilan cepat & offline PRTG.
+// Skema database aplikasi (SQLite + Drizzle).
+//
+// CATATAN TRANSISI (Fase 1): nama properti TypeScript sudah memakai istilah
+// baru (assetId, librenmsAlertId), tetapi STRING KOLOM legacy ("prtg_device_id",
+// "prtg_sensor_id") sengaja dipertahankan agar tidak perlu migration rename
+// SQLite. Kolom di-rename tuntas saat baseline PostgreSQL (Fase 2).
+// Tabel telemetry (device_metrics, port_metrics, pon_port_samples,
+// onu_status_samples, metric_history) dipensiunkan pada Fase 2 karena
+// LibreNMS menjadi source of truth telemetry.
 
 import { sql } from "drizzle-orm";
 import {
@@ -11,10 +17,10 @@ import {
   uniqueIndex,
 } from "drizzle-orm/sqlite-core";
 
-// Profil perangkat khusus aplikasi: mengawinkan ID perangkat PRTG dengan
-// koordinat peta GIS & pengelompokan area (PRTG tidak menyimpan lat/lng).
+// Profil aset khusus aplikasi: metadata tambahan di luar LibreNMS
+// (koordinat peta GIS & pengelompokan area).
 export const deviceMetadata = sqliteTable("device_metadata", {
-  prtgDeviceId: text("prtg_device_id").primaryKey(),
+  assetId: text("prtg_device_id").primaryKey(),
   customName: text("custom_name").notNull(),
   ipAddress: text("ip_address").notNull(),
   deviceGroup: text("device_group", {
@@ -33,9 +39,9 @@ export const deviceMetrics = sqliteTable(
   "device_metrics",
   {
     id: integer("id").primaryKey({ autoIncrement: true }),
-    prtgDeviceId: text("prtg_device_id")
+    assetId: text("prtg_device_id")
       .notNull()
-      .references(() => deviceMetadata.prtgDeviceId, { onDelete: "cascade" }),
+      .references(() => deviceMetadata.assetId, { onDelete: "cascade" }),
     recordedAt: text("recorded_at").notNull(),
     cpuPercent: real("cpu_percent").notNull(),
     ramPercent: real("ram_percent").notNull(),
@@ -43,7 +49,7 @@ export const deviceMetrics = sqliteTable(
   },
   (table) => [
     uniqueIndex("device_metrics_device_time_idx").on(
-      table.prtgDeviceId,
+      table.assetId,
       table.recordedAt,
     ),
   ],
@@ -54,9 +60,9 @@ export const slaMonthly = sqliteTable(
   "sla_monthly",
   {
     id: integer("id").primaryKey({ autoIncrement: true }),
-    prtgDeviceId: text("prtg_device_id")
+    assetId: text("prtg_device_id")
       .notNull()
-      .references(() => deviceMetadata.prtgDeviceId, { onDelete: "cascade" }),
+      .references(() => deviceMetadata.assetId, { onDelete: "cascade" }),
     /** Periode laporan, format "YYYY-MM". */
     period: text("period").notNull(),
     uptimePercent: real("uptime_percent").notNull(),
@@ -65,7 +71,7 @@ export const slaMonthly = sqliteTable(
   },
   (table) => [
     uniqueIndex("sla_monthly_device_period_idx").on(
-      table.prtgDeviceId,
+      table.assetId,
       table.period,
     ),
   ],
@@ -76,9 +82,9 @@ export const trafficMonthly = sqliteTable(
   "traffic_monthly",
   {
     id: integer("id").primaryKey({ autoIncrement: true }),
-    prtgDeviceId: text("prtg_device_id")
+    assetId: text("prtg_device_id")
       .notNull()
-      .references(() => deviceMetadata.prtgDeviceId, { onDelete: "cascade" }),
+      .references(() => deviceMetadata.assetId, { onDelete: "cascade" }),
     /** Periode laporan, format "YYYY-MM". */
     period: text("period").notNull(),
     downloadGb: real("download_gb").notNull(),
@@ -88,7 +94,7 @@ export const trafficMonthly = sqliteTable(
   },
   (table) => [
     uniqueIndex("traffic_monthly_device_period_idx").on(
-      table.prtgDeviceId,
+      table.assetId,
       table.period,
     ),
   ],
@@ -130,7 +136,7 @@ export const notificationChannels = sqliteTable("notification_channels", {
 // Audit log alert yang diteruskan sistem ke bot (skema notification_logs PRD).
 export const notificationLogs = sqliteTable("notification_logs", {
   id: text("id").primaryKey(),
-  prtgSensorId: text("prtg_sensor_id").notNull(),
+  librenmsAlertId: text("prtg_sensor_id").notNull(),
   deviceName: text("device_name").notNull(),
   alertType: text("alert_type", { enum: ["telegram", "whatsapp"] }).notNull(),
   messageContent: text("message_content").notNull(),
@@ -147,9 +153,9 @@ export const metricHistory = sqliteTable(
   "metric_history",
   {
     id: integer("id").primaryKey({ autoIncrement: true }),
-    prtgDeviceId: text("prtg_device_id")
+    assetId: text("prtg_device_id")
       .notNull()
-      .references(() => deviceMetadata.prtgDeviceId, { onDelete: "cascade" }),
+      .references(() => deviceMetadata.assetId, { onDelete: "cascade" }),
     metric: text("metric", {
       enum: ["cpu", "ram", "suhu", "bandwidth"],
     }).notNull(),
@@ -164,7 +170,7 @@ export const metricHistory = sqliteTable(
   },
   (table) => [
     uniqueIndex("metric_history_device_metric_res_bucket_idx").on(
-      table.prtgDeviceId,
+      table.assetId,
       table.metric,
       table.resolution,
       table.bucketStart,
@@ -177,9 +183,9 @@ export const ponPortSamples = sqliteTable(
   "pon_port_samples",
   {
     id: integer("id").primaryKey({ autoIncrement: true }),
-    prtgDeviceId: text("prtg_device_id")
+    assetId: text("prtg_device_id")
       .notNull()
-      .references(() => deviceMetadata.prtgDeviceId, { onDelete: "cascade" }),
+      .references(() => deviceMetadata.assetId, { onDelete: "cascade" }),
     portName: text("port_name").notNull(),
     sfpUp: integer("sfp_up", { mode: "boolean" }).notNull(),
     txPowerDbm: real("tx_power_dbm").notNull(),
@@ -187,7 +193,7 @@ export const ponPortSamples = sqliteTable(
   },
   (table) => [
     uniqueIndex("pon_port_samples_device_port_time_idx").on(
-      table.prtgDeviceId,
+      table.assetId,
       table.portName,
       table.recordedAt,
     ),
@@ -200,9 +206,9 @@ export const onuStatusSamples = sqliteTable(
   "onu_status_samples",
   {
     id: integer("id").primaryKey({ autoIncrement: true }),
-    prtgDeviceId: text("prtg_device_id")
+    assetId: text("prtg_device_id")
       .notNull()
-      .references(() => deviceMetadata.prtgDeviceId, { onDelete: "cascade" }),
+      .references(() => deviceMetadata.assetId, { onDelete: "cascade" }),
     portName: text("port_name").notNull(),
     onuId: text("onu_id").notNull(),
     rxPowerDbm: real("rx_power_dbm").notNull(),
@@ -213,7 +219,7 @@ export const onuStatusSamples = sqliteTable(
   },
   (table) => [
     uniqueIndex("onu_status_samples_device_port_onu_time_idx").on(
-      table.prtgDeviceId,
+      table.assetId,
       table.portName,
       table.onuId,
       table.recordedAt,
@@ -226,9 +232,9 @@ export const portMetrics = sqliteTable(
   "port_metrics",
   {
     id: integer("id").primaryKey({ autoIncrement: true }),
-    prtgDeviceId: text("prtg_device_id")
+    assetId: text("prtg_device_id")
       .notNull()
-      .references(() => deviceMetadata.prtgDeviceId, { onDelete: "cascade" }),
+      .references(() => deviceMetadata.assetId, { onDelete: "cascade" }),
     portName: text("port_name").notNull(),
     recordedAt: text("recorded_at").notNull(),
     downloadMbps: real("download_mbps").notNull(),
@@ -236,7 +242,7 @@ export const portMetrics = sqliteTable(
   },
   (table) => [
     uniqueIndex("port_metrics_device_port_time_idx").on(
-      table.prtgDeviceId,
+      table.assetId,
       table.portName,
       table.recordedAt,
     ),

@@ -5,7 +5,7 @@ export type NotificationSendStatus = "sent" | "failed";
 // Mengikuti skema tabel notification_logs pada PRD.
 export interface NotificationLog {
   id: string;
-  prtgSensorId: string;
+  librenmsAlertId: string;
   deviceName: string;
   alertType: ChannelType;
   messageContent: string;

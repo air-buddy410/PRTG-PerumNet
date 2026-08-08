@@ -1,5 +1,5 @@
-// Generator data metrik tiruan yang deterministik per perangkat, sehingga
-// grafik stabil antar-render. Nantinya diganti data riil dari PRTG API.
+// DEVELOPMENT FIXTURE — generator metrik tiruan deterministik per perangkat.
+// Diganti data riil dari adapter LibreNMS pada Fase 3.
 
 import type { DeviceGroup } from "@/types/device";
 
@@ -113,7 +113,7 @@ export function generatePortBandwidth(
 
 // ---------------------------------------------------------------------------
 // State polling: deret metrik "maju" satu titik tiap penarikan, meniru data
-// live PRTG. Init deterministik per perangkat, langkah berikutnya acak halus.
+// live LibreNMS. Init deterministik per perangkat, langkah berikutnya acak halus.
 // ---------------------------------------------------------------------------
 
 const timeLabel = () =>

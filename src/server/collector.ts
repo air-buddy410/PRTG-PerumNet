@@ -1,5 +1,6 @@
 // Worker pengumpul metrik (Job Scheduler pada arsitektur PRD): menarik
-// metrik "dari PRTG" (saat ini sumber simulasi), menyimpan sampel mentah ke
+// metrik dari sumber monitoring (saat ini simulasi; LibreNMS pada Fase 3),
+// menyimpan sampel mentah ke
 // SQLite, dan merangkum rollup per jam ke metric_history.
 
 import { and, eq, gte, sql } from "drizzle-orm";
@@ -16,7 +17,7 @@ import { getDeviceMetrics } from "@/server/metrics-store";
 const COLLECT_INTERVAL_MS = 60_000;
 
 const HISTORY_CONFLICT_TARGET = [
-  metricHistory.prtgDeviceId,
+  metricHistory.assetId,
   metricHistory.metric,
   metricHistory.resolution,
   metricHistory.bucketStart,
@@ -27,7 +28,7 @@ function hourBucketOf(iso: string): string {
 }
 
 function upsertHistory(
-  prtgDeviceId: string,
+  assetId: string,
   metric: "cpu" | "ram" | "suhu" | "bandwidth",
   resolution: "raw" | "hourly",
   bucketStart: string,
@@ -37,7 +38,7 @@ function upsertHistory(
 ) {
   db.insert(metricHistory)
     .values({
-      prtgDeviceId,
+      assetId,
       metric,
       resolution,
       bucketStart,
@@ -67,7 +68,7 @@ export async function collectMetricsOnce(): Promise<CollectResult> {
   for (const device of snapshot.devices) {
     db.insert(deviceMetadata)
       .values({
-        prtgDeviceId: device.id,
+        assetId: device.id,
         customName: device.name,
         ipAddress: device.ip,
         deviceGroup: device.group,
@@ -76,7 +77,7 @@ export async function collectMetricsOnce(): Promise<CollectResult> {
         longitude: device.longitude,
       })
       .onConflictDoUpdate({
-        target: deviceMetadata.prtgDeviceId,
+        target: deviceMetadata.assetId,
         set: {
           customName: device.name,
           ipAddress: device.ip,
@@ -97,7 +98,7 @@ export async function collectMetricsOnce(): Promise<CollectResult> {
 
     db.insert(deviceMetrics)
       .values({
-        prtgDeviceId: device.id,
+        assetId: device.id,
         recordedAt,
         cpuPercent: latest.cpu,
         ramPercent: latest.ram,
@@ -109,7 +110,7 @@ export async function collectMetricsOnce(): Promise<CollectResult> {
     for (const port of metrics.ports) {
       db.insert(portMetrics)
         .values({
-          prtgDeviceId: device.id,
+          assetId: device.id,
           portName: port.port,
           recordedAt,
           downloadMbps: port.currentDownload,
@@ -154,7 +155,7 @@ export async function collectMetricsOnce(): Promise<CollectResult> {
       .from(deviceMetrics)
       .where(
         and(
-          eq(deviceMetrics.prtgDeviceId, device.id),
+          eq(deviceMetrics.assetId, device.id),
           gte(deviceMetrics.recordedAt, hourBucket),
         ),
       )
@@ -173,7 +174,7 @@ export async function collectMetricsOnce(): Promise<CollectResult> {
       .from(portMetrics)
       .where(
         and(
-          eq(portMetrics.prtgDeviceId, device.id),
+          eq(portMetrics.assetId, device.id),
           gte(portMetrics.recordedAt, hourBucket),
         ),
       )

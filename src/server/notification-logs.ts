@@ -1,6 +1,6 @@
 // Akses data riwayat notifikasi. Tabel di-seed sekali dari data tiruan
 // saat masih kosong agar endpoint langsung berguna sebelum dispatcher
-// webhook PRTG (task berikutnya) mulai menulis log asli.
+// webhook LibreNMS mulai menulis log asli.
 
 import { and, desc, eq, like, or, sql } from "drizzle-orm";
 import { db } from "@/db";
@@ -19,7 +19,7 @@ export function seedLogsIfEmpty() {
     db.insert(notificationLogs)
       .values({
         id: log.id,
-        prtgSensorId: log.prtgSensorId,
+        librenmsAlertId: log.librenmsAlertId,
         deviceName: log.deviceName,
         alertType: log.alertType,
         messageContent: log.messageContent,

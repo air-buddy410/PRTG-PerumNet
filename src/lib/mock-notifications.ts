@@ -47,7 +47,7 @@ export const MOCK_CHANNELS: NotificationChannel[] = [
 export const MOCK_NOTIFICATION_LOGS: NotificationLog[] = [
   {
     id: "log-01",
-    prtgSensorId: "13245",
+    librenmsAlertId: "13245",
     deviceName: "OLT ZTE C320 - Area Kebayoran",
     alertType: "telegram",
     messageContent: "🔴 DOWN: SFP PON gpon-olt_1/2 padam (Dying Gasp 3 ONU)",
@@ -56,7 +56,7 @@ export const MOCK_NOTIFICATION_LOGS: NotificationLog[] = [
   },
   {
     id: "log-02",
-    prtgSensorId: "13245",
+    librenmsAlertId: "13245",
     deviceName: "OLT ZTE C320 - Area Kebayoran",
     alertType: "whatsapp",
     messageContent: "🔴 DOWN: SFP PON gpon-olt_1/2 padam (Dying Gasp 3 ONU)",
@@ -65,7 +65,7 @@ export const MOCK_NOTIFICATION_LOGS: NotificationLog[] = [
   },
   {
     id: "log-03",
-    prtgSensorId: "11872",
+    librenmsAlertId: "11872",
     deviceName: "Ruijie RG-S2928 - Akses Palmerah",
     alertType: "telegram",
     messageContent: "🟡 WARNING: Latency naik 220 ms (ambang 150 ms)",
@@ -76,7 +76,7 @@ export const MOCK_NOTIFICATION_LOGS: NotificationLog[] = [
   },
   {
     id: "log-04",
-    prtgSensorId: "10233",
+    librenmsAlertId: "10233",
     deviceName: "MikroTik CCR2004 - Core Menteng",
     alertType: "telegram",
     messageContent: "🟡 WARNING: CPU load 92% selama 5 menit",
@@ -85,7 +85,7 @@ export const MOCK_NOTIFICATION_LOGS: NotificationLog[] = [
   },
   {
     id: "log-05",
-    prtgSensorId: "12984",
+    librenmsAlertId: "12984",
     deviceName: "OLT ZTE C300 - Area Kuningan",
     alertType: "whatsapp",
     messageContent: "🟢 UP: SFP PON gpon-olt_1/1 kembali normal",
@@ -94,7 +94,7 @@ export const MOCK_NOTIFICATION_LOGS: NotificationLog[] = [
   },
   {
     id: "log-06",
-    prtgSensorId: "11872",
+    librenmsAlertId: "11872",
     deviceName: "Ruijie RG-S2928 - Akses Ciputat",
     alertType: "telegram",
     messageContent: "🔴 DOWN: Port Gi0/3 tidak merespons ping",
@@ -105,7 +105,7 @@ export const MOCK_NOTIFICATION_LOGS: NotificationLog[] = [
   },
   {
     id: "log-07",
-    prtgSensorId: "10561",
+    librenmsAlertId: "10561",
     deviceName: "MikroTik RB4011 - POP Kemayoran",
     alertType: "whatsapp",
     messageContent: "🟡 WARNING: Suhu perangkat 71°C (ambang 60°C)",
@@ -114,7 +114,7 @@ export const MOCK_NOTIFICATION_LOGS: NotificationLog[] = [
   },
   {
     id: "log-08",
-    prtgSensorId: "12984",
+    librenmsAlertId: "12984",
     deviceName: "OLT ZTE C300 - Area Kuningan",
     alertType: "telegram",
     messageContent: "🔴 DOWN: Rx Power ONU-1/1-05 di bawah -28 dBm",

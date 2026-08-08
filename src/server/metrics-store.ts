@@ -1,7 +1,7 @@
 // Metrik dasar per perangkat di sisi server, dengan read-through cache
 // ber-TTL 10 detik per perangkat — meniru pola worker→cache pada PRD.
 // Sumber data disimulasikan (deret maju per sinkronisasi); nantinya diganti
-// penarikan sensor PRTG API.
+// adapter LibreNMS API (Fase 3).
 
 import {
   advancePortBandwidth,

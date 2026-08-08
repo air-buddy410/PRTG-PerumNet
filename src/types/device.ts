@@ -3,7 +3,7 @@ export type DeviceStatus = "online" | "warning" | "offline";
 export type DeviceGroup = "MikroTik" | "Ruijie" | "OLT";
 
 export interface NetworkDevice {
-  /** ID referensi perangkat di PRTG */
+  /** Sama dengan `Asset.assetId` (identitas internal Portal). */
   id: string;
   name: string;
   ip: string;

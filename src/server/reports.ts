@@ -3,7 +3,7 @@
 // Rekap bulanan disimpan di tabel sla_monthly / traffic_monthly. Saat sebuah
 // periode belum punya rekap, tabel di-seed dari generator tiruan yang sama
 // dengan frontend (deterministik per periode+perangkat) — nantinya diganti
-// agregasi worker dari data PRTG.
+// agregasi dari data availability/port LibreNMS (Fase 3).
 
 import { asc, eq } from "drizzle-orm";
 import { db } from "@/db";
@@ -21,7 +21,7 @@ function ensureDeviceMetadata() {
   for (const device of MOCK_DEVICES) {
     db.insert(deviceMetadata)
       .values({
-        prtgDeviceId: device.id,
+        assetId: device.id,
         customName: device.name,
         ipAddress: device.ip,
         deviceGroup: device.group,
@@ -47,7 +47,7 @@ function seedSlaIfMissing(period: string) {
   for (const row of generateSlaReport(period)) {
     db.insert(slaMonthly)
       .values({
-        prtgDeviceId: row.deviceId,
+        assetId: row.deviceId,
         period,
         uptimePercent: row.uptimePercent,
         downtimeMinutes: row.downtimeMinutes,
@@ -63,7 +63,7 @@ export function getSlaReport(period: string) {
 
   const rows = db
     .select({
-      deviceId: slaMonthly.prtgDeviceId,
+      deviceId: slaMonthly.assetId,
       deviceName: deviceMetadata.customName,
       group: deviceMetadata.deviceGroup,
       area: deviceMetadata.areaName,
@@ -74,7 +74,7 @@ export function getSlaReport(period: string) {
     .from(slaMonthly)
     .innerJoin(
       deviceMetadata,
-      eq(slaMonthly.prtgDeviceId, deviceMetadata.prtgDeviceId),
+      eq(slaMonthly.assetId, deviceMetadata.assetId),
     )
     .where(eq(slaMonthly.period, period))
     .orderBy(asc(slaMonthly.uptimePercent))
@@ -118,7 +118,7 @@ function seedTrafficIfMissing(period: string) {
   for (const row of generateTrafficReport(period)) {
     db.insert(trafficMonthly)
       .values({
-        prtgDeviceId: row.deviceId,
+        assetId: row.deviceId,
         period,
         downloadGb: row.downloadGB,
         uploadGb: row.uploadGB,
@@ -217,7 +217,7 @@ export function getTrafficReport(period: string) {
 
   const rows = db
     .select({
-      deviceId: trafficMonthly.prtgDeviceId,
+      deviceId: trafficMonthly.assetId,
       deviceName: deviceMetadata.customName,
       group: deviceMetadata.deviceGroup,
       area: deviceMetadata.areaName,
@@ -229,7 +229,7 @@ export function getTrafficReport(period: string) {
     .from(trafficMonthly)
     .innerJoin(
       deviceMetadata,
-      eq(trafficMonthly.prtgDeviceId, deviceMetadata.prtgDeviceId),
+      eq(trafficMonthly.assetId, deviceMetadata.assetId),
     )
     .where(eq(trafficMonthly.period, period))
     .all()

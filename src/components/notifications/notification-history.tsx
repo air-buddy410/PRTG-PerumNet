@@ -294,7 +294,7 @@ export default function NotificationHistory() {
                             <dt className="w-28 text-muted-foreground">
                               ID Sensor Monitoring
                             </dt>
-                            <dd className="font-mono">{log.prtgSensorId}</dd>
+                            <dd className="font-mono">{log.librenmsAlertId}</dd>
                           </div>
                           <div className="flex gap-2">
                             <dt className="w-28 text-muted-foreground">

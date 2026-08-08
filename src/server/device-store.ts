@@ -1,9 +1,9 @@
 // Sumber data status perangkat di sisi server.
 //
-// Meniru arsitektur PRD: worker menyinkronkan data PRTG ke cache tiap 10
-// detik, dan endpoint hanya membaca snapshot cache — berapa pun banyaknya
-// klien, PRTG tidak ikut terbebani. Untuk saat ini sinkronisasi disimulasikan
-// dengan drift status acak; nantinya diganti penarikan PRTG API → Redis.
+// Worker menyinkronkan data monitoring ke cache tiap 10 detik, dan endpoint
+// hanya membaca snapshot cache — berapa pun banyaknya klien, sumber tidak
+// ikut terbebani. Saat ini sinkronisasi DISIMULASIKAN dengan drift status
+// acak (development fixture); diganti adapter LibreNMS API pada Fase 3.
 
 import { MOCK_DEVICES } from "@/lib/mock-devices";
 import { cache } from "@/server/cache";

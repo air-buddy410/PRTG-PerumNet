@@ -1,5 +1,5 @@
 // Lapisan cache sesuai arsitektur PRD: aplikasi web membaca snapshot dari
-// cache, bukan menembak sumber (PRTG) per permintaan.
+// cache, bukan menembak sumber (LibreNMS) per permintaan.
 //
 // - Produksi: set REDIS_URL (Redis lokal/Upstash) → dipakai adapter Redis.
 // - Tanpa REDIS_URL: fallback cache in-memory dengan TTL yang sama, cukup

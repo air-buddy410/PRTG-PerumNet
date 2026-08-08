@@ -3,19 +3,18 @@ import { dispatchAlert } from "@/server/notifier";
 
 export const dynamic = "force-dynamic";
 
-interface PrtgWebhookBody {
+interface LegacyWebhookBody {
   sensorId?: string;
   device?: string;
   message?: string;
 }
 
 /**
- * POST /api/webhooks/prtg
- * Menerima notifikasi HTTP action dari PRTG lalu meneruskannya ke semua
- * channel WhatsApp/Telegram aktif via dispatcher.
+ * @deprecated ALIAS LEGACY — pindah ke POST /api/v1/integrations/librenms/alerts.
  *
- * Keamanan: bila PRTG_WEBHOOK_SECRET di-set, permintaan wajib menyertakan
- * header `x-webhook-token` dengan nilai yang sama.
+ * Rute ini dipertahankan sementara agar konfigurasi webhook lama tidak putus
+ * selama transisi; DIHAPUS pada Fase 7. Secret legacy `PRTG_WEBHOOK_SECRET`
+ * masih dihormati di sini saja.
  */
 export async function POST(request: Request) {
   const secret = process.env.PRTG_WEBHOOK_SECRET;
@@ -26,7 +25,7 @@ export async function POST(request: Request) {
     );
   }
 
-  let body: PrtgWebhookBody;
+  let body: LegacyWebhookBody;
   try {
     body = await request.json();
   } catch {
@@ -47,10 +46,19 @@ export async function POST(request: Request) {
   }
 
   const result = await dispatchAlert({
-    prtgSensorId: sensorId,
+    librenmsAlertId: sensorId,
     deviceName: device,
     message,
   });
 
-  return NextResponse.json({ ok: true, ...result }, { status: 202 });
+  return NextResponse.json(
+    { ok: true, ...result },
+    {
+      status: 202,
+      headers: {
+        Deprecation: "true",
+        Link: '</api/v1/integrations/librenms/alerts>; rel="successor-version"',
+      },
+    },
+  );
 }
