@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import LastUpdated from "@/components/last-updated";
 import MapLegend from "@/components/map/map-legend";
 import MapView from "@/components/map/map-view";
 
@@ -11,16 +10,12 @@ export const metadata: Metadata = {
 
 export default function MapPage() {
   return (
-    <main className="relative h-dvh w-full overflow-hidden">
-      <div className="absolute left-4 top-4 z-[1000] rounded-lg border bg-card/90 px-4 py-2 shadow-lg backdrop-blur">
-        <h1 className="text-sm font-semibold">Peta Sebaran Jaringan</h1>
-        <p className="text-xs text-muted-foreground">
-          PerumNet — Monitoring ISP
-        </p>
-        <LastUpdated />
-      </div>
+    <main className="noc-page noc-map-page">
+      <div className="noc-page-intro"><div><h1>Peta jaringan</h1><p>Temukan status perangkat berdasarkan area dan jenis perangkat.</p></div></div>
+      <div className="noc-map-canvas">
       <MapLegend />
       <MapView />
+      </div>
     </main>
   );
 }

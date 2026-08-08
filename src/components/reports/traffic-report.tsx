@@ -59,6 +59,23 @@ export default function TrafficReport({ period }: { period: string }) {
           )}
         </p>
       </div>
+      <div className="divide-y md:hidden">
+        {rows.map((row) => (
+          <article key={row.deviceId} className="p-4">
+            <h3 className="text-sm font-semibold">{row.deviceName}</h3>
+            <p className="mt-1 text-xs text-muted-foreground">
+              {row.group} · {row.area}
+            </p>
+            <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 text-xs text-muted-foreground">
+              <span>Download<br /><b className="text-foreground">{formatVolume(row.downloadGb)}</b></span>
+              <span>Upload<br /><b className="text-foreground">{formatVolume(row.uploadGb)}</b></span>
+              <span>Rata-rata<br /><b className="text-foreground">{row.avgMbps} Mbps</b></span>
+              <span>Puncak<br /><b className="text-foreground">{row.peakMbps} Mbps</b></span>
+            </div>
+          </article>
+        ))}
+      </div>
+      <div className="hidden md:block">
       <Table>
         <TableHeader>
           <TableRow className="hover:bg-transparent">
@@ -99,6 +116,7 @@ export default function TrafficReport({ period }: { period: string }) {
           ))}
         </TableBody>
       </Table>
+      </div>
     </div>
   );
 }

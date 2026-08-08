@@ -23,9 +23,6 @@ const TILE_DARK =
   "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png";
 const TILE_LIGHT =
   "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png";
-const TILE_ATTRIBUTION =
-  '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>';
-
 interface NetworkMapProps {
   devices: NetworkDevice[];
   /** Berubah hanya saat pilihan filter berubah — memicu auto-fit peta. */
@@ -71,13 +68,13 @@ export default function NetworkMap({ devices, filterKey }: NetworkMapProps) {
       center={DEFAULT_CENTER}
       zoom={DEFAULT_ZOOM}
       zoomControl={false}
+      attributionControl={false}
       className="h-full w-full bg-background"
     >
       {/* key forces the tile layer to remount when the theme switches */}
       <TileLayer
         key={isDark ? "dark" : "light"}
         url={isDark ? TILE_DARK : TILE_LIGHT}
-        attribution={TILE_ATTRIBUTION}
       />
       {/* key ikut status: setStyle Leaflet tidak meng-update className,
           jadi marker di-remount saat statusnya berubah */}

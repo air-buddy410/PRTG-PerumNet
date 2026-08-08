@@ -47,7 +47,7 @@ export default function ReportsView() {
     REPORT_PERIODS.find((item) => item.value === period)?.label ?? period;
 
   return (
-    <section className="flex flex-1 flex-col gap-4 overflow-y-auto px-6 py-6">
+    <section className="flex flex-1 flex-col gap-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex rounded-md border p-0.5">
           {REPORT_TYPES.map(({ key, label, Icon }) => (

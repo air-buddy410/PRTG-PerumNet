@@ -3,6 +3,7 @@
 import { useDevices } from "@/hooks/use-devices";
 import { STATUS_COLORS, STATUS_LABELS } from "@/lib/status";
 import type { DeviceStatus } from "@/types/device";
+import { Activity, CheckCircle2, Server, TriangleAlert } from "lucide-react";
 
 export default function HealthSummary() {
   const { devices } = useDevices();
@@ -21,50 +22,39 @@ export default function HealthSummary() {
     value: number;
     color?: string;
     pulse?: boolean;
+    icon: typeof Server;
   }[] = [
-    { label: "Total Perangkat", value: devices.length },
+    { label: "Total perangkat", value: devices.length, icon: Server },
     {
       label: STATUS_LABELS.online,
       value: counts.online,
       color: STATUS_COLORS.online,
+      icon: CheckCircle2,
     },
     {
       label: STATUS_LABELS.warning,
       value: counts.warning,
       color: STATUS_COLORS.warning,
+      icon: TriangleAlert,
     },
     {
       label: STATUS_LABELS.offline,
       value: counts.offline,
       color: STATUS_COLORS.offline,
       pulse: counts.offline > 0,
+      icon: Activity,
     },
   ];
 
   return (
-    <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+    <div className="noc-health-grid">
       {cards.map((card) => (
         <div
           key={card.label}
-          className="rounded-lg border bg-card px-5 py-4 shadow-sm"
+          className="noc-health-card"
         >
-          <p className="flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-            {card.color && (
-              <span
-                className={`inline-block size-2.5 rounded-full ${
-                  card.pulse ? "animate-pulse" : ""
-                }`}
-                style={{ backgroundColor: card.color }}
-              />
-            )}
-            {card.label}
-          </p>
-          <p
-            className="mt-2 text-4xl font-bold tabular-nums xl:text-5xl"
-            style={card.color ? { color: card.color } : undefined}
-          >
-            {hasData ? card.value : "–"}
-          </p>
+          <span className={`noc-health-icon ${card.pulse ? "is-pulsing" : ""}`} style={card.color ? { color: card.color } : undefined}><card.icon /></span>
+          <div><p>{card.label}</p><strong style={card.color ? { color: card.color } : undefined}>{hasData ? card.value : "–"}</strong><small>{card.label === "Total perangkat" ? "Seluruh lokasi" : "Status terkini"}</small></div>
         </div>
       ))}
     </div>

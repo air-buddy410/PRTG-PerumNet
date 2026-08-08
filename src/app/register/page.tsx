@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import RegisterForm from "@/components/auth/register-form";
 
 export const metadata: Metadata = {
@@ -11,7 +12,14 @@ export default function RegisterPage() {
     <main className="flex min-h-dvh items-center justify-center px-4 py-10">
       <div className="w-full max-w-sm">
         <div className="mb-6 text-center">
-          <h1 className="text-xl font-semibold tracking-tight">PerumNet</h1>
+          <Image
+            src="/brand/perumnet-logo.png"
+            alt="PerumNet"
+            width={132}
+            height={184}
+            priority
+            className="mx-auto"
+          />
           <p className="mt-1 text-sm text-muted-foreground">
             Daftar akun untuk mengakses monitoring NOC
           </p>

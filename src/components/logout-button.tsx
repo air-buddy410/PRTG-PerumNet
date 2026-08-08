@@ -5,7 +5,7 @@ import { LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { sendJson } from "@/lib/api/http";
 
-export default function LogoutButton() {
+export default function LogoutButton({ compact = false }: { compact?: boolean }) {
   const router = useRouter();
 
   async function handleLogout() {
@@ -17,12 +17,13 @@ export default function LogoutButton() {
   return (
     <Button
       variant="outline"
-      size="sm"
+      size={compact ? "icon-lg" : "sm"}
       onClick={handleLogout}
+      aria-label={compact ? "Keluar" : undefined}
       className="text-[#d03b3b] hover:text-[#d03b3b]"
     >
       <LogOut data-icon="inline-start" />
-      Keluar
+      {compact ? <span className="sr-only">Keluar</span> : "Keluar"}
     </Button>
   );
 }

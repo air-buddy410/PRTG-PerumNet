@@ -13,7 +13,7 @@ export default async function DeviceDetailPage({
   const { id } = await params;
 
   return (
-    <main className="flex h-dvh flex-col overflow-hidden">
+    <main className="noc-page noc-device-detail-page">
       <DeviceDetail deviceId={id} />
     </main>
   );

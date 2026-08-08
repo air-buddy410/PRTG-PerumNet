@@ -63,6 +63,9 @@ export default function MapView() {
         </p>
       )}
       <NetworkMap devices={visibleDevices} filterKey={`${area}|${group}`} />
+      <p className="noc-map-attribution" aria-label="Sumber data peta">
+        © OpenStreetMap · © CARTO
+      </p>
     </>
   );
 }

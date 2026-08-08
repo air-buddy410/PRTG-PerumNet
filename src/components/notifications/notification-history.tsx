@@ -292,7 +292,7 @@ export default function NotificationHistory() {
                           </div>
                           <div className="flex gap-2">
                             <dt className="w-28 text-muted-foreground">
-                              Sensor PRTG
+                              ID Sensor Monitoring
                             </dt>
                             <dd className="font-mono">{log.prtgSensorId}</dd>
                           </div>

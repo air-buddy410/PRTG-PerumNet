@@ -62,7 +62,7 @@ export default function DeviceDetail({ deviceId }: { deviceId: string }) {
             <dd className="font-mono text-foreground">{device.ip}</dd>
           </div>
           <div className="flex gap-1.5">
-            <dt>PRTG ID:</dt>
+            <dt>ID Monitoring:</dt>
             <dd className="font-mono text-foreground">{device.id}</dd>
           </div>
         </dl>

@@ -18,7 +18,7 @@ export default function MiniMap() {
   const { devices } = useDevices();
 
   return (
-    <div className="flex h-full min-h-80 flex-col overflow-hidden rounded-lg border bg-card">
+    <div className="noc-panel flex h-full min-h-80 flex-col overflow-hidden">
       <div className="flex items-center justify-between border-b px-4 py-3">
         <p className="text-sm font-medium">Peta Sebaran Jaringan</p>
         <Link

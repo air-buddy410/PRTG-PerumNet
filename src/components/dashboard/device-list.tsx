@@ -30,58 +30,81 @@ export default function DeviceList() {
   );
 
   return (
-    <div className="overflow-hidden rounded-lg border bg-card">
+    <div className="noc-device-list overflow-hidden">
       {error && (
         <p className="border-b border-destructive/30 bg-destructive/10 px-4 py-2 text-xs text-destructive">
           Gagal menyinkronkan data perangkat — menampilkan data terakhir yang
           diketahui. Mencoba ulang otomatis…
         </p>
       )}
-      <Table>
-        <TableHeader>
-          <TableRow className="hover:bg-transparent">
-            <TableHead>Nama Perangkat</TableHead>
-            <TableHead>Jenis</TableHead>
-            <TableHead>Area</TableHead>
-            <TableHead>IP Address</TableHead>
-            <TableHead className="text-right">Status</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {sorted.length === 0 && (
-            <TableRow>
-              <TableCell
-                colSpan={5}
-                className="h-24 text-center text-muted-foreground"
+      {sorted.length === 0 ? (
+        <p className="px-4 py-8 text-center text-sm text-muted-foreground">
+          {isLoading ? "Memuat data perangkat…" : "Tidak ada perangkat."}
+        </p>
+      ) : (
+        <>
+          <div className="grid gap-2 p-2 md:hidden">
+            {sorted.map((device) => (
+              <Link
+                key={device.id}
+                href={`/devices/${device.id}`}
+                className="rounded-lg border border-border bg-card px-3 py-3 transition-colors active:bg-secondary"
               >
-                {isLoading ? "Memuat data perangkat…" : "Tidak ada perangkat."}
-              </TableCell>
-            </TableRow>
-          )}
-          {sorted.map((device) => (
-            <TableRow key={device.id}>
-              <TableCell className="font-medium">
-                <Link
-                  href={`/devices/${device.id}`}
-                  className="hover:underline"
-                >
-                  {device.name}
-                </Link>
-              </TableCell>
-              <TableCell className="text-muted-foreground">
-                {device.group}
-              </TableCell>
-              <TableCell className="text-muted-foreground">
-                {device.area}
-              </TableCell>
-              <TableCell className="font-mono text-xs">{device.ip}</TableCell>
-              <TableCell className="text-right">
-                <StatusBadge status={device.status} />
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+                <div className="flex items-start justify-between gap-3">
+                  <strong className="text-sm leading-5 text-foreground">
+                    {device.name}
+                  </strong>
+                  <StatusBadge status={device.status} />
+                </div>
+                <div className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                  <span>{device.group}</span>
+                  <span>{device.area}</span>
+                  <span className="font-mono">{device.ip}</span>
+                  <span className="text-right text-primary">Buka detail →</span>
+                </div>
+              </Link>
+            ))}
+          </div>
+
+          <div className="hidden md:block">
+            <Table>
+              <TableHeader>
+                <TableRow className="hover:bg-transparent">
+                  <TableHead>Nama Perangkat</TableHead>
+                  <TableHead>Jenis</TableHead>
+                  <TableHead>Area</TableHead>
+                  <TableHead>IP Address</TableHead>
+                  <TableHead className="text-right">Status</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {sorted.map((device) => (
+                  <TableRow key={device.id}>
+                    <TableCell className="font-medium">
+                      <Link
+                        href={`/devices/${device.id}`}
+                        className="hover:underline"
+                      >
+                        {device.name}
+                      </Link>
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {device.group}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {device.area}
+                    </TableCell>
+                    <TableCell className="font-mono text-xs">{device.ip}</TableCell>
+                    <TableCell className="text-right">
+                      <StatusBadge status={device.status} />
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        </>
+      )}
     </div>
   );
 }

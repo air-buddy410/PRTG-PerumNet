@@ -63,6 +63,33 @@ export default function SlaReport({ period }: { period: string }) {
           )}
         </p>
       </div>
+      <div className="divide-y md:hidden">
+        {rows.map((row) => (
+          <article key={row.deviceId} className="p-4">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <h3 className="text-sm font-semibold">{row.deviceName}</h3>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {row.group} · {row.area}
+                </p>
+              </div>
+              <span
+                className={`text-sm font-semibold tabular-nums ${
+                  row.meetsTarget ? "text-primary" : "text-[#d03b3b]"
+                }`}
+              >
+                {row.uptimePercent.toFixed(2)}%
+              </span>
+            </div>
+            <div className="mt-3 grid grid-cols-3 gap-2 text-xs text-muted-foreground">
+              <span>Downtime<br /><b className="text-foreground">{formatDowntime(row.downtimeMinutes)}</b></span>
+              <span>Insiden<br /><b className="text-foreground">{row.incidents}</b></span>
+              <span className="text-right">SLA<br /><b className={row.meetsTarget ? "text-[#0ca30c]" : "text-[#d03b3b]"}>{row.meetsTarget ? "Terpenuhi" : "Di bawah"}</b></span>
+            </div>
+          </article>
+        ))}
+      </div>
+      <div className="hidden md:block">
       <Table>
         <TableHeader>
           <TableRow className="hover:bg-transparent">
@@ -117,6 +144,7 @@ export default function SlaReport({ period }: { period: string }) {
           ))}
         </TableBody>
       </Table>
+      </div>
     </div>
   );
 }
