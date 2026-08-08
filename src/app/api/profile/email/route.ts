@@ -32,11 +32,11 @@ export const PATCH = withRole([], async (request, sessionUser) => {
     );
   }
 
-  const taken = db
+  const [taken] = await db
     .select({ id: user.id })
     .from(user)
     .where(eq(user.email, email))
-    .get();
+    .limit(1);
   if (taken && taken.id !== sessionUser.id) {
     return NextResponse.json(
       { error: `Email ${email} sudah dipakai akun lain.` },
@@ -44,10 +44,10 @@ export const PATCH = withRole([], async (request, sessionUser) => {
     );
   }
 
-  db.update(user)
+  await db
+    .update(user)
     .set({ email, emailVerified: false })
-    .where(eq(user.id, sessionUser.id))
-    .run();
+    .where(eq(user.id, sessionUser.id));
 
   return NextResponse.json({
     user: { id: sessionUser.id, name: sessionUser.name, email },

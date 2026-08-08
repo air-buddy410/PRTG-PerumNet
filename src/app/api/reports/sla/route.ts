@@ -18,7 +18,7 @@ export async function GET(request: Request) {
     );
   }
 
-  return NextResponse.json(getSlaReport(period), {
+  return NextResponse.json(await getSlaReport(period), {
     headers: {
       "Cache-Control": "public, s-maxage=300, stale-while-revalidate=60",
     },

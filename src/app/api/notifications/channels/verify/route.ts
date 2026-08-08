@@ -36,7 +36,7 @@ export async function POST(request: Request) {
     );
   }
 
-  const channel = db
+  const [channel] = await db
     .select()
     .from(notificationChannels)
     .where(
@@ -45,7 +45,7 @@ export async function POST(request: Request) {
         eq(notificationChannels.verified, false),
       ),
     )
-    .get();
+    .limit(1);
 
   if (!channel) {
     return NextResponse.json(
@@ -54,15 +54,15 @@ export async function POST(request: Request) {
     );
   }
 
-  db.update(notificationChannels)
+  await db
+    .update(notificationChannels)
     .set({
       verified: true,
       active: true,
       verificationCode: null,
       chatId,
     })
-    .where(eq(notificationChannels.id, channel.id))
-    .run();
+    .where(eq(notificationChannels.id, channel.id));
 
   return NextResponse.json({
     channel: {

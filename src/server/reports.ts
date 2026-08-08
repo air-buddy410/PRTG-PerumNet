@@ -1,87 +1,105 @@
 // Layanan data laporan (SLA & trafik) di sisi server.
 //
-// Rekap bulanan disimpan di tabel sla_monthly / traffic_monthly. Saat sebuah
-// periode belum punya rekap, tabel di-seed dari generator tiruan yang sama
-// dengan frontend (deterministik per periode+perangkat) — nantinya diganti
-// agregasi dari data availability/port LibreNMS (Fase 3).
+// Rekap bulanan disimpan di tabel cache sla_monthly / traffic_monthly.
+// DEVELOPMENT: saat sebuah periode belum punya rekap, tabel di-seed dari
+// generator fixture (deterministik per periode+aset). Pada Fase 3 seed ini
+// diganti agregasi dari data availability/port LibreNMS.
 
+import { randomUUID } from "node:crypto";
 import { asc, eq } from "drizzle-orm";
 import { db } from "@/db";
-import { deviceMetadata, slaMonthly, trafficMonthly } from "@/db/schema";
-import { MOCK_DEVICES } from "@/lib/mock-devices";
+import { assets, slaMonthly, trafficMonthly } from "@/db/schema";
+import { FIXTURE_ASSETS } from "@/lib/fixtures/assets";
 import {
   generateSlaReport,
   generateTrafficReport,
   SLA_TARGET_PERCENT,
 } from "@/lib/mock-reports";
+import type { Asset } from "@/types/asset";
 
 export const PERIOD_PATTERN = /^\d{4}-(0[1-9]|1[0-2])$/;
 
-function ensureDeviceMetadata() {
-  for (const device of MOCK_DEVICES) {
-    db.insert(deviceMetadata)
-      .values({
-        assetId: device.id,
-        customName: device.name,
-        ipAddress: device.ip,
-        deviceGroup: device.group,
-        areaName: device.area,
-        latitude: device.latitude,
-        longitude: device.longitude,
-      })
-      .onConflictDoNothing()
-      .run();
+/** Grup tampilan legacy untuk UI laporan (role olt → OLT, selain itu vendor). */
+function legacyGroup(networkRole: string, vendor: string): string {
+  return networkRole === "olt" ? "OLT" : vendor;
+}
+
+/** DEVELOPMENT SEED — mengisi tabel assets dari fixture bila belum ada. */
+export async function ensureAssetsSeed() {
+  for (const asset of FIXTURE_ASSETS) {
+    await db
+      .insert(assets)
+      .values(assetToRow(asset))
+      .onConflictDoNothing();
   }
 }
 
-function seedSlaIfMissing(period: string) {
-  const existing = db
+function assetToRow(asset: Asset) {
+  return {
+    assetId: asset.assetId,
+    librenmsDeviceId: asset.librenmsDeviceId,
+    hostname: asset.hostname,
+    displayName: asset.displayName,
+    managementIp: asset.managementIp,
+    vendor: asset.vendor,
+    os: asset.os,
+    model: asset.model,
+    serialNumber: asset.serialNumber,
+    site: asset.site,
+    location: asset.location,
+    latitude: asset.latitude,
+    longitude: asset.longitude,
+    tags: asset.tags,
+    networkRole: asset.networkRole,
+  };
+}
+
+async function seedSlaIfMissing(period: string) {
+  const [existing] = await db
     .select({ id: slaMonthly.id })
     .from(slaMonthly)
     .where(eq(slaMonthly.period, period))
-    .limit(1)
-    .get();
+    .limit(1);
   if (existing) return;
 
-  ensureDeviceMetadata();
+  await ensureAssetsSeed();
   for (const row of generateSlaReport(period)) {
-    db.insert(slaMonthly)
+    await db
+      .insert(slaMonthly)
       .values({
+        id: randomUUID(),
         assetId: row.deviceId,
         period,
         uptimePercent: row.uptimePercent,
         downtimeMinutes: row.downtimeMinutes,
         incidents: row.incidents,
       })
-      .onConflictDoNothing()
-      .run();
+      .onConflictDoNothing();
   }
 }
 
-export function getSlaReport(period: string) {
-  seedSlaIfMissing(period);
+export async function getSlaReport(period: string) {
+  await seedSlaIfMissing(period);
 
-  const rows = db
+  const rows = await db
     .select({
       deviceId: slaMonthly.assetId,
-      deviceName: deviceMetadata.customName,
-      group: deviceMetadata.deviceGroup,
-      area: deviceMetadata.areaName,
+      deviceName: assets.displayName,
+      vendor: assets.vendor,
+      networkRole: assets.networkRole,
+      area: assets.site,
       uptimePercent: slaMonthly.uptimePercent,
       downtimeMinutes: slaMonthly.downtimeMinutes,
       incidents: slaMonthly.incidents,
     })
     .from(slaMonthly)
-    .innerJoin(
-      deviceMetadata,
-      eq(slaMonthly.assetId, deviceMetadata.assetId),
-    )
+    .innerJoin(assets, eq(slaMonthly.assetId, assets.assetId))
     .where(eq(slaMonthly.period, period))
-    .orderBy(asc(slaMonthly.uptimePercent))
-    .all();
+    .orderBy(asc(slaMonthly.uptimePercent));
 
-  const withTarget = rows.map((row) => ({
+  const withTarget = rows.map(({ vendor, networkRole, ...row }) => ({
     ...row,
+    group: legacyGroup(networkRole, vendor),
     meetsTarget: row.uptimePercent >= SLA_TARGET_PERCENT,
   }));
   const averageUptime =
@@ -105,19 +123,20 @@ export function getSlaReport(period: string) {
   };
 }
 
-function seedTrafficIfMissing(period: string) {
-  const existing = db
+async function seedTrafficIfMissing(period: string) {
+  const [existing] = await db
     .select({ id: trafficMonthly.id })
     .from(trafficMonthly)
     .where(eq(trafficMonthly.period, period))
-    .limit(1)
-    .get();
+    .limit(1);
   if (existing) return;
 
-  ensureDeviceMetadata();
+  await ensureAssetsSeed();
   for (const row of generateTrafficReport(period)) {
-    db.insert(trafficMonthly)
+    await db
+      .insert(trafficMonthly)
       .values({
+        id: randomUUID(),
         assetId: row.deviceId,
         period,
         downloadGb: row.downloadGB,
@@ -125,8 +144,7 @@ function seedTrafficIfMissing(period: string) {
         avgMbps: row.avgMbps,
         peakMbps: row.peakMbps,
       })
-      .onConflictDoNothing()
-      .run();
+      .onConflictDoNothing();
   }
 }
 
@@ -150,7 +168,7 @@ export function enumerateMonths(from: string, to: string): string[] {
  * Rekap trafik ter-agregasi untuk rentang bulan [from..to]: total volume
  * dijumlahkan, rata-rata Mbps dirata-ratakan, puncak diambil maksimum.
  */
-export function getTrafficReportRange(from: string, to: string) {
+export async function getTrafficReportRange(from: string, to: string) {
   const months = enumerateMonths(from, to);
   const perDevice = new Map<
     string,
@@ -168,7 +186,8 @@ export function getTrafficReportRange(from: string, to: string) {
   >();
 
   for (const period of months) {
-    for (const row of getTrafficReport(period).rows) {
+    const report = await getTrafficReport(period);
+    for (const row of report.rows) {
       const entry = perDevice.get(row.deviceId);
       if (!entry) {
         perDevice.set(row.deviceId, {
@@ -212,27 +231,30 @@ export function getTrafficReportRange(from: string, to: string) {
   };
 }
 
-export function getTrafficReport(period: string) {
-  seedTrafficIfMissing(period);
+export async function getTrafficReport(period: string) {
+  await seedTrafficIfMissing(period);
 
-  const rows = db
+  const rawRows = await db
     .select({
       deviceId: trafficMonthly.assetId,
-      deviceName: deviceMetadata.customName,
-      group: deviceMetadata.deviceGroup,
-      area: deviceMetadata.areaName,
+      deviceName: assets.displayName,
+      vendor: assets.vendor,
+      networkRole: assets.networkRole,
+      area: assets.site,
       downloadGb: trafficMonthly.downloadGb,
       uploadGb: trafficMonthly.uploadGb,
       avgMbps: trafficMonthly.avgMbps,
       peakMbps: trafficMonthly.peakMbps,
     })
     .from(trafficMonthly)
-    .innerJoin(
-      deviceMetadata,
-      eq(trafficMonthly.assetId, deviceMetadata.assetId),
-    )
-    .where(eq(trafficMonthly.period, period))
-    .all()
+    .innerJoin(assets, eq(trafficMonthly.assetId, assets.assetId))
+    .where(eq(trafficMonthly.period, period));
+
+  const rows = rawRows
+    .map(({ vendor, networkRole, ...row }) => ({
+      ...row,
+      group: legacyGroup(networkRole, vendor),
+    }))
     .sort((a, b) => b.downloadGb - a.downloadGb);
 
   return {

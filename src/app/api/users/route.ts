@@ -11,7 +11,7 @@ export const dynamic = "force-dynamic";
  * Hanya untuk Admin NOC.
  */
 export const GET = withRole(["admin"], async () => {
-  const users = db
+  const users = await db
     .select({
       id: user.id,
       name: user.name,
@@ -22,7 +22,7 @@ export const GET = withRole(["admin"], async () => {
     })
     .from(user)
     .orderBy(asc(user.createdAt))
-    .all();
+    ;
 
   return NextResponse.json({ users, total: users.length });
 });

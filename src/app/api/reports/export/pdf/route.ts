@@ -28,8 +28,8 @@ export const GET = withRole(["admin", "manajemen"], async (request, user) => {
     );
   }
 
-  const pdf = buildReportPdf(type, period);
-  recordExport(type, "pdf", period, user.id);
+  const pdf = await buildReportPdf(type, period);
+  await recordExport(type, "pdf", period, user.id);
 
   return new NextResponse(new Uint8Array(pdf), {
     headers: {

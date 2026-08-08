@@ -46,7 +46,7 @@ export const GET = withRole([], async (request) => {
     );
   }
 
-  const page = listLogs({
+  const page = await listLogs({
     q: searchParams.get("q") ?? undefined,
     channel: (channel ?? undefined) as LogFilters["channel"],
     status: (status ?? undefined) as LogFilters["status"],

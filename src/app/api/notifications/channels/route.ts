@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 
 /** GET /api/notifications/channels — daftar channel terdaftar (perlu login). */
 export const GET = withRole([], async () => {
-  const channels = db
+  const channels = await db
     .select({
       id: notificationChannels.id,
       type: notificationChannels.type,
@@ -21,7 +21,7 @@ export const GET = withRole([], async () => {
     })
     .from(notificationChannels)
     .orderBy(desc(notificationChannels.createdAt))
-    .all();
+    ;
 
   return NextResponse.json({ channels, total: channels.length });
 });
@@ -68,7 +68,7 @@ export const POST = withRole([], async (request) => {
     );
   }
 
-  const existing = db
+  const [existing] = await db
     .select({ id: notificationChannels.id })
     .from(notificationChannels)
     .where(
@@ -77,7 +77,7 @@ export const POST = withRole([], async (request) => {
         eq(notificationChannels.target, target),
       ),
     )
-    .get();
+    .limit(1);
   if (existing) {
     return NextResponse.json(
       { error: `Target ${target} (${type}) sudah terdaftar.` },
@@ -95,7 +95,7 @@ export const POST = withRole([], async (request) => {
     active: false,
     verificationCode,
   };
-  db.insert(notificationChannels).values(channel).run();
+  await db.insert(notificationChannels).values(channel);
 
   return NextResponse.json(
     {

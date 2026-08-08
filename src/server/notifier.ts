@@ -100,12 +100,12 @@ export interface DispatchResult {
 export async function dispatchAlert(
   payload: AlertPayload,
 ): Promise<DispatchResult> {
-  const channels = db
-    .select()
-    .from(notificationChannels)
-    .where(eq(notificationChannels.active, true))
-    .all()
-    .filter((channel) => channel.verified);
+  const channels = (
+    await db
+      .select()
+      .from(notificationChannels)
+      .where(eq(notificationChannels.active, true))
+  ).filter((channel) => channel.verified);
 
   const result: DispatchResult = {
     sent: 0,
@@ -126,17 +126,15 @@ export async function dispatchAlert(
     }
 
     const logId = randomUUID();
-    db.insert(notificationLogs)
-      .values({
-        id: logId,
-        librenmsAlertId: payload.librenmsAlertId,
-        deviceName: payload.deviceName,
-        alertType: channel.type,
-        messageContent: payload.message,
-        status: outcome.ok ? "sent" : "failed",
-        triggeredAt: new Date().toISOString(),
-      })
-      .run();
+    await db.insert(notificationLogs).values({
+      id: logId,
+      librenmsAlertId: payload.librenmsAlertId,
+      deviceName: payload.deviceName,
+      alertType: channel.type,
+      messageContent: payload.message,
+      status: outcome.ok ? "sent" : "failed",
+      triggeredAt: new Date(),
+    });
 
     result.logIds.push(logId);
     if (outcome.ok) result.sent += 1;

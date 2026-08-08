@@ -16,7 +16,7 @@ export const GET = withRole<LogRouteContext>([], async (
   { params },
 ) => {
   const { id } = await params;
-  const log = getLogById(id);
+  const log = await getLogById(id);
   if (!log) {
     return NextResponse.json(
       { error: `Log dengan ID ${id} tidak ditemukan.` },
@@ -54,7 +54,7 @@ export const PATCH = withRole<LogRouteContext>([], async (
     );
   }
 
-  const existing = getLogById(id);
+  const existing = await getLogById(id);
   if (!existing) {
     return NextResponse.json(
       { error: `Log dengan ID ${id} tidak ditemukan.` },
@@ -63,10 +63,10 @@ export const PATCH = withRole<LogRouteContext>([], async (
   }
 
   const note = body.resolutionNote.trim();
-  db.update(notificationLogs)
+  await db
+    .update(notificationLogs)
     .set({ resolutionNote: note === "" ? null : note })
-    .where(eq(notificationLogs.id, id))
-    .run();
+    .where(eq(notificationLogs.id, id));
 
-  return NextResponse.json({ log: getLogById(id) });
+  return NextResponse.json({ log: await getLogById(id) });
 });

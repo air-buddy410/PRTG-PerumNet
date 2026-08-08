@@ -1,8 +1,6 @@
-// Guard Fase 1: istilah "PRTG" tidak boleh muncul lagi di src/, kecuali pada
-// daftar pengecualian yang disengaja:
-//  - src/db/schema.ts            → string kolom legacy (di-rename saat baseline
-//                                  PostgreSQL, Fase 2)
-//  - src/app/api/webhooks/prtg/  → alias webhook deprecated (dihapus Fase 7)
+// Guard Fase 1 (diperketat di Fase 2): istilah "PRTG" tidak boleh muncul
+// lagi di src/, kecuali alias webhook deprecated (dihapus Fase 7).
+// Sejak baseline PostgreSQL, schema.ts juga bebas PRTG sepenuhnya.
 
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import path from "node:path";
@@ -11,7 +9,6 @@ import { describe, expect, it } from "vitest";
 const SRC_DIR = path.resolve(__dirname, "..", "src");
 
 const ALLOWLIST = [
-  path.join("db", "schema.ts"),
   path.join("app", "api", "webhooks", "prtg", "route.ts"),
 ];
 

@@ -28,8 +28,8 @@ export const GET = withRole(["admin", "manajemen"], async (request, user) => {
     );
   }
 
-  const workbook = buildReportXlsx(type, period);
-  recordExport(type, "excel", period, user.id);
+  const workbook = await buildReportXlsx(type, period);
+  await recordExport(type, "excel", period, user.id);
 
   return new NextResponse(new Uint8Array(workbook), {
     headers: {

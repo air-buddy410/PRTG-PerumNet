@@ -35,7 +35,7 @@ export const PATCH = withRole<{ params: Promise<{ id: string }> }>(
     );
   }
 
-  const target = db.select().from(user).where(eq(user.id, id)).get();
+  const [target] = await db.select().from(user).where(eq(user.id, id)).limit(1);
   if (!target) {
     return NextResponse.json(
       { error: `Pengguna dengan ID ${id} tidak ditemukan.` },
@@ -44,12 +44,11 @@ export const PATCH = withRole<{ params: Promise<{ id: string }> }>(
   }
 
   if (target.role === "admin" && role !== "admin") {
-    const adminCount =
-      db
-        .select({ n: sql<number>`count(*)` })
-        .from(user)
-        .where(eq(user.role, "admin"))
-        .get()?.n ?? 0;
+    const [adminRow] = await db
+      .select({ n: sql<number>`count(*)::int` })
+      .from(user)
+      .where(eq(user.role, "admin"));
+    const adminCount = adminRow?.n ?? 0;
     if (adminCount <= 1) {
       return NextResponse.json(
         { error: "Tidak bisa menurunkan admin terakhir." },
@@ -58,7 +57,7 @@ export const PATCH = withRole<{ params: Promise<{ id: string }> }>(
     }
   }
 
-  db.update(user).set({ role }).where(eq(user.id, id)).run();
+  await db.update(user).set({ role }).where(eq(user.id, id));
 
   return NextResponse.json({
     user: { id: target.id, name: target.name, email: target.email, role },

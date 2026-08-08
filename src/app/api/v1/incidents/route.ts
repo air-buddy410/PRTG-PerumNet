@@ -30,7 +30,7 @@ export const GET = withRole([], async (request) => {
     );
   }
 
-  const page = listLogs({ limit });
+  const page = await listLogs({ limit });
   const incidents: IncidentView[] = page.logs.map((log) => ({
     id: log.id,
     librenmsAlertId: log.librenmsAlertId,
@@ -39,7 +39,7 @@ export const GET = withRole([], async (request) => {
     severity: inferSeverity(log.messageContent),
     state: "open",
     message: log.messageContent,
-    triggeredAt: log.triggeredAt,
+    triggeredAt: log.triggeredAt.toISOString(),
     acknowledgedBy: null,
     acknowledgedAt: null,
     resolutionNote: log.resolutionNote,

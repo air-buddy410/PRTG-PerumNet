@@ -1,0 +1,26 @@
+# PostgreSQL untuk development multi-proses / paritas produksi.
+# Jalankan:  docker compose -f docker-compose.dev.yml up -d
+# Lalu set di .env.local:
+#   DATABASE_URL=postgres://perumnet:perumnet@localhost:5432/perumnet
+# Tanpa ini aplikasi memakai PGlite (./data/pglite) — cukup untuk 1 proses.
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: perumnet-postgres
+    environment:
+      POSTGRES_USER: perumnet
+      POSTGRES_PASSWORD: perumnet
+      POSTGRES_DB: perumnet
+    ports:
+      - "5432:5432"
+    volumes:
+      - perumnet-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U perumnet -d perumnet"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  perumnet-pgdata:

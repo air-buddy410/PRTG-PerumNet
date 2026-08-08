@@ -32,7 +32,7 @@ export async function GET(request: Request) {
         { status: 400 },
       );
     }
-    return NextResponse.json(getTrafficReport(period), { headers });
+    return NextResponse.json(await getTrafficReport(period), { headers });
   }
 
   if (!from || !to || !PERIOD_PATTERN.test(from) || !PERIOD_PATTERN.test(to)) {
@@ -57,5 +57,5 @@ export async function GET(request: Request) {
     );
   }
 
-  return NextResponse.json(getTrafficReportRange(from, to), { headers });
+  return NextResponse.json(await getTrafficReportRange(from, to), { headers });
 }

@@ -1,5 +1,6 @@
-// Akses data riwayat notifikasi. Tabel di-seed sekali dari data tiruan
-// saat masih kosong agar endpoint langsung berguna sebelum dispatcher
+// Akses data riwayat notifikasi (tabel LEGACY-AKTIF `notification_logs`,
+// lihat catatan pada src/db/schema.ts). Tabel di-seed sekali dari fixture
+// development saat masih kosong agar endpoint langsung berguna sebelum
 // webhook LibreNMS mulai menulis log asli.
 
 import { and, desc, eq, like, or, sql } from "drizzle-orm";
@@ -7,16 +8,16 @@ import { db } from "@/db";
 import { notificationLogs } from "@/db/schema";
 import { MOCK_NOTIFICATION_LOGS } from "@/lib/mock-notifications";
 
-export function seedLogsIfEmpty() {
-  const existing = db
+export async function seedLogsIfEmpty() {
+  const [existing] = await db
     .select({ id: notificationLogs.id })
     .from(notificationLogs)
-    .limit(1)
-    .get();
+    .limit(1);
   if (existing) return;
 
   for (const log of MOCK_NOTIFICATION_LOGS) {
-    db.insert(notificationLogs)
+    await db
+      .insert(notificationLogs)
       .values({
         id: log.id,
         librenmsAlertId: log.librenmsAlertId,
@@ -25,10 +26,9 @@ export function seedLogsIfEmpty() {
         messageContent: log.messageContent,
         status: log.status,
         resolutionNote: log.resolutionNote ?? null,
-        triggeredAt: log.triggeredAt,
+        triggeredAt: new Date(log.triggeredAt),
       })
-      .onConflictDoNothing()
-      .run();
+      .onConflictDoNothing();
   }
 }
 
@@ -49,8 +49,8 @@ export interface LogPage {
 }
 
 // Penyaringan di level SQL agar tetap ringan saat log membesar.
-export function listLogs(filters: LogFilters): LogPage {
-  seedLogsIfEmpty();
+export async function listLogs(filters: LogFilters): Promise<LogPage> {
+  await seedLogsIfEmpty();
 
   const conditions = [];
   if (filters.channel) {
@@ -73,30 +73,28 @@ export function listLogs(filters: LogFilters): LogPage {
   const limit = filters.limit ?? 50;
   const offset = filters.offset ?? 0;
 
-  const total =
-    db
-      .select({ n: sql<number>`count(*)` })
-      .from(notificationLogs)
-      .where(where)
-      .get()?.n ?? 0;
+  const [{ n: total } = { n: 0 }] = await db
+    .select({ n: sql<number>`count(*)::int` })
+    .from(notificationLogs)
+    .where(where);
 
-  const logs = db
+  const logs = await db
     .select()
     .from(notificationLogs)
     .where(where)
     .orderBy(desc(notificationLogs.triggeredAt))
     .limit(limit)
-    .offset(offset)
-    .all();
+    .offset(offset);
 
   return { logs, total, limit, offset };
 }
 
-export function getLogById(id: string) {
-  seedLogsIfEmpty();
-  return db
+export async function getLogById(id: string) {
+  await seedLogsIfEmpty();
+  const [log] = await db
     .select()
     .from(notificationLogs)
     .where(eq(notificationLogs.id, id))
-    .get();
+    .limit(1);
+  return log ?? null;
 }

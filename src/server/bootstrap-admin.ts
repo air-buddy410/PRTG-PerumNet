@@ -13,20 +13,18 @@ const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD ?? "perumnet123";
 const ADMIN_NAME = process.env.ADMIN_NAME ?? "Admin NOC";
 
 export async function ensureAdminUser() {
-  const existingAdmin = db
+  const [existingAdmin] = await db
     .select({ id: user.id })
     .from(user)
     .where(eq(user.role, "admin"))
-    .limit(1)
-    .get();
+    .limit(1);
   if (existingAdmin) return;
 
-  const existingByEmail = db
+  const [existingByEmail] = await db
     .select({ id: user.id })
     .from(user)
     .where(eq(user.email, ADMIN_EMAIL))
-    .limit(1)
-    .get();
+    .limit(1);
 
   let adminId = existingByEmail?.id;
   if (!adminId) {
@@ -40,6 +38,6 @@ export async function ensureAdminUser() {
     adminId = created.user.id;
   }
 
-  db.update(user).set({ role: "admin" }).where(eq(user.id, adminId)).run();
+  await db.update(user).set({ role: "admin" }).where(eq(user.id, adminId));
   console.log(`[bootstrap] akun Admin NOC siap: ${ADMIN_EMAIL}`);
 }

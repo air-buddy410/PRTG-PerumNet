@@ -18,9 +18,9 @@ interface ReportTable {
   body: string[][];
 }
 
-function buildTable(kind: ReportKind, period: string): ReportTable {
+async function buildTable(kind: ReportKind, period: string): Promise<ReportTable> {
   if (kind === "sla") {
-    const report = getSlaReport(period);
+    const report = await getSlaReport(period);
     return {
       title: `Laporan Ketersediaan SLA — ${period}`,
       head: [
@@ -43,7 +43,7 @@ function buildTable(kind: ReportKind, period: string): ReportTable {
       ]),
     };
   }
-  const report = getTrafficReport(period);
+  const report = await getTrafficReport(period);
   return {
     title: `Laporan Penggunaan Trafik — ${period}`,
     head: [
@@ -67,8 +67,8 @@ function buildTable(kind: ReportKind, period: string): ReportTable {
   };
 }
 
-export function buildReportPdf(kind: ReportKind, period: string): Buffer {
-  const { title, head, body } = buildTable(kind, period);
+export async function buildReportPdf(kind: ReportKind, period: string): Promise<Buffer> {
+  const { title, head, body } = await buildTable(kind, period);
   const doc = new jsPDF({ orientation: "landscape" });
   doc.setFontSize(13);
   doc.text(title, 14, 16);
@@ -85,8 +85,8 @@ export function buildReportPdf(kind: ReportKind, period: string): Buffer {
   return Buffer.from(doc.output("arraybuffer"));
 }
 
-export function buildReportXlsx(kind: ReportKind, period: string): Buffer {
-  const { title, head, body } = buildTable(kind, period);
+export async function buildReportXlsx(kind: ReportKind, period: string): Promise<Buffer> {
+  const { title, head, body } = await buildTable(kind, period);
   const sheet = XLSX.utils.aoa_to_sheet([[title], [], head, ...body]);
   sheet["!cols"] = head.map((label, index) => ({
     wch: Math.max(
@@ -104,13 +104,13 @@ export function buildReportXlsx(kind: ReportKind, period: string): Buffer {
 }
 
 /** Catat audit ekspor laporan (riwayat bulanan sesuai PRD). */
-export function recordExport(
+export async function recordExport(
   kind: ReportKind,
   formatType: "pdf" | "excel",
   period: string,
   userId?: string,
 ) {
-  db.insert(slaReports)
+  await db.insert(slaReports)
     .values({
       id: randomUUID(),
       reportName: `laporan-${kind}-${period}`,
@@ -118,6 +118,5 @@ export function recordExport(
       formatType,
       period,
       userId: userId ?? null,
-    })
-    .run();
+    });
 }
