@@ -24,13 +24,13 @@ export const GET = withRole([], async (request) => {
   const status = searchParams.get("status");
   const query = searchParams.get("q")?.trim().toLowerCase();
 
-  if (site && !knownSites().includes(site)) {
+  if (site && !(await knownSites()).includes(site)) {
     return NextResponse.json(
       { error: `Site tidak dikenal: ${site}` },
       { status: 400 },
     );
   }
-  if (vendor && !knownVendors().includes(vendor)) {
+  if (vendor && !(await knownVendors()).includes(vendor)) {
     return NextResponse.json(
       { error: `Vendor tidak dikenal: ${vendor}` },
       { status: 400 },

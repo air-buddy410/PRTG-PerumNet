@@ -32,7 +32,7 @@ export async function GET(request: Request) {
   const query = searchParams.get("q")?.trim().toLowerCase();
   const sort = searchParams.get("sort");
 
-  const meta = getDeviceMeta();
+  const meta = await getDeviceMeta();
   if (area && area !== "all" && !meta.areas.includes(area)) {
     return NextResponse.json(
       { error: `Area tidak dikenal: ${area}` },
