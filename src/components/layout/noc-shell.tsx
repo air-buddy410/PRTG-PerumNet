@@ -5,18 +5,21 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import {
   useEffect,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
 import {
   Bell,
   BarChart3,
+  ChevronDown,
   ChevronRight,
   ClipboardList,
   LayoutDashboard,
   Map,
   Menu,
   Search,
+  UserRound,
   Users,
   Wifi,
   X,
@@ -24,7 +27,7 @@ import {
 import LogoutButton from "@/components/logout-button";
 
 const navigation = [
-  { href: "/dashboard", label: "Dasbor", icon: LayoutDashboard },
+  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/devices", label: "Perangkat", icon: Wifi },
   { href: "/map", label: "Peta Jaringan", icon: Map },
   { href: "/notifications", label: "Notifikasi", icon: Bell },
@@ -33,7 +36,7 @@ const navigation = [
 ];
 
 const pageNames: Record<string, string> = {
-  "/dashboard": "Dasbor",
+  "/dashboard": "Dashboard",
   "/devices": "Perangkat",
   "/map": "Peta Jaringan",
   "/notifications": "Notifikasi",
@@ -44,12 +47,14 @@ const pageNames: Record<string, string> = {
 
 function currentPage(pathname: string) {
   if (pathname.startsWith("/devices/")) return "Perangkat";
-  return pageNames[pathname] ?? "Dasbor";
+  return pageNames[pathname] ?? "Dashboard";
 }
 
 export default function NocShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const profileMenuRef = useRef<HTMLDivElement>(null);
   const isPublicPage = pathname === "/login" || pathname === "/register";
 
   useEffect(() => {
@@ -71,6 +76,26 @@ export default function NocShell({ children }: { children: ReactNode }) {
       window.removeEventListener("keydown", closeOnEscape);
     };
   }, [menuOpen]);
+
+  useEffect(() => {
+    if (!profileOpen) return;
+
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setProfileOpen(false);
+    };
+    const closeOnOutsidePress = (event: PointerEvent) => {
+      if (!profileMenuRef.current?.contains(event.target as Node)) {
+        setProfileOpen(false);
+      }
+    };
+
+    window.addEventListener("keydown", closeOnEscape);
+    window.addEventListener("pointerdown", closeOnOutsidePress);
+    return () => {
+      window.removeEventListener("keydown", closeOnEscape);
+      window.removeEventListener("pointerdown", closeOnOutsidePress);
+    };
+  }, [profileOpen]);
 
   if (isPublicPage) return <>{children}</>;
 
@@ -100,14 +125,22 @@ export default function NocShell({ children }: { children: ReactNode }) {
         </button>
         <div className="noc-brand">
           <Image
-            src="/brand/perumnet-logo.png"
-            alt="PerumNet"
-            width={106}
-            height={148}
+            src="/brand/perumnet-mark.png"
+            alt=""
+            width={34}
+            height={40}
             priority
-            className="noc-brand-logo"
+            className="noc-brand-mark"
           />
-          <span>Network Operations Center</span>
+          <Image
+            src="/brand/perumnet-wordmark.png"
+            alt="PerumNet"
+            width={122}
+            height={17}
+            priority
+            className="noc-brand-wordmark"
+          />
+          <strong>NOC</strong>
         </div>
         <div className="noc-sidebar-rule" />
         <nav className="noc-navigation" aria-label="Navigasi utama">
@@ -130,12 +163,12 @@ export default function NocShell({ children }: { children: ReactNode }) {
           })}
         </nav>
         <div className="noc-sidebar-footer">
-          <div className="noc-avatar">AD</div>
+          <span className="noc-avatar">AD</span>
           <div>
             <strong>Admin NOC</strong>
             <span>noc@perumnet.id</span>
           </div>
-          <Link href="/profile" aria-label="Buka profil" onClick={() => setMenuOpen(false)}>
+          <Link href="/profile" aria-label="Buka profil">
             <ChevronRight aria-hidden="true" />
           </Link>
         </div>
@@ -174,7 +207,30 @@ export default function NocShell({ children }: { children: ReactNode }) {
             <Link href="/reports" aria-label="Laporan">
               <BarChart3 aria-hidden="true" />
             </Link>
-            <LogoutButton compact />
+            <div className="noc-profile-menu" ref={profileMenuRef}>
+              <button
+                type="button"
+                className="noc-profile-toggle"
+                aria-label="Buka menu akun"
+                aria-haspopup="menu"
+                aria-expanded={profileOpen}
+                onClick={() => setProfileOpen((value) => !value)}
+              >
+                <UserRound aria-hidden="true" />
+                <span>Admin NOC</span>
+                <ChevronDown aria-hidden="true" />
+              </button>
+              {profileOpen && (
+                <div className="noc-profile-panel" role="menu" aria-label="Menu akun">
+                  <Link href="/profile" role="menuitem" onClick={() => setProfileOpen(false)}>
+                    <UserRound aria-hidden="true" />
+                    Profil saya
+                  </Link>
+                  <span className="noc-profile-panel-rule" />
+                  <LogoutButton />
+                </div>
+              )}
+            </div>
           </div>
         </header>
         <div className="noc-content">{children}</div>

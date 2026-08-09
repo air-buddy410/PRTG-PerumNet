@@ -7,9 +7,9 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-  --font-heading: var(--font-sans);
+  --font-sans: var(--font-perumnet-body);
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+  --font-heading: var(--font-perumnet-heading);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -165,10 +165,311 @@
   }
   body {
     @apply bg-background text-foreground;
-    font-family: var(--font-geist-sans), "DM Sans", Arial, sans-serif;
+    font-family: var(--font-perumnet-body), "DM Sans", Arial, sans-serif;
   }
   html {
-    font-family: var(--font-geist-sans), "DM Sans", Arial, sans-serif;
+    font-family: var(--font-perumnet-body), "DM Sans", Arial, sans-serif;
+  }
+
+  h1, h2, h3, .page-title, .metric-value {
+    font-family: var(--font-perumnet-heading), "Plus Jakarta Sans", Arial, sans-serif;
+  }
+}
+
+/* PerumNet-CRM login reference, adapted only for the NOC product labels. */
+.noc-login-page { display:grid; min-height:100dvh; padding:28px 18px; place-items:center; background:radial-gradient(circle at 22% 13%,#e5f8f5 0,transparent 28%),linear-gradient(135deg,#f7fbfa 0%,#edf7f5 100%); }
+.noc-login-wrap { width:min(100%,400px); }
+.noc-login-brand { display:grid; justify-items:center; gap:10px; margin-bottom:24px; }
+.noc-logo-lockup { display:inline-flex; align-items:center; gap:8px; line-height:1; }
+.noc-logo-mark { display:block; width:56px; height:56px; object-fit:contain; }
+.noc-wordmark { display:block; width:auto; height:25px; object-fit:contain; }
+.noc-login-brand > span { color:#63807c; font-size:10px; font-weight:800; letter-spacing:.14em; }
+.noc-login-card { padding:28px; background:#fff; border:1px solid #dfece9; border-radius:15px; box-shadow:0 18px 46px #25413a16; }
+.noc-login-icon { display:grid; width:42px; height:42px; margin-bottom:17px; place-items:center; color:#04a99f; background:#e4f7f5; border-radius:10px; }
+.noc-login-icon svg { width:21px; height:21px; }
+.noc-login-card h1 { margin:0; color:#33484a; font-size:21px; font-weight:800; letter-spacing:-.55px; }
+.noc-login-card > p { margin:6px 0 21px; color:#718185; font-size:13px; }
+.noc-login-form { gap:15px; }
+.noc-login-form [data-slot="label"] { color:#53646a; font-size:12px; font-weight:800; }
+.noc-login-form [data-slot="input"] { height:43px; background:#fff; border-color:#d9e7e4; border-radius:8px; box-shadow:0 1px 2px #25413a0d; }
+.noc-login-form [data-slot="input"]:focus-visible { border-color:#04a99f; box-shadow:0 0 0 3px #04a99f1c; }
+.noc-login-form [data-slot="button"] { height:42px; margin-top:1px; color:#fff; background:#04a99f; border-radius:8px; font-weight:800; }
+.noc-login-form [data-slot="button"]:hover { background:#008f87; }
+.noc-login-footer { margin:19px 0 0; color:#829391; font-size:11px; text-align:center; }
+
+/* PerumNet-CRM NOC dashboard shell. The routes and actions remain unchanged. */
+.noc-sidebar { padding:25px 18px 17px; }
+.noc-brand { display:flex; align-items:center; gap:8px; padding:5px 9px 21px; }
+.noc-brand-mark { display:block; width:34px; height:40px; object-fit:contain; }
+.noc-brand-wordmark { display:block; width:116px; height:auto; object-fit:contain; }
+.noc-brand > strong { padding-left:8px; color:#50cfc7; border-left:1px solid #85aaa666; font-size:11px; font-weight:800; letter-spacing:.12em; }
+.noc-sidebar-rule { margin:0 9px 17px; }
+.noc-nav-link.is-active { background:linear-gradient(135deg,#06b1a7,#008d85); box-shadow:0 10px 24px #003f3a38; }
+.noc-sidebar-footer { padding-top:17px; }
+.noc-topbar { position:sticky; top:0; z-index:25; }
+.noc-profile-menu { position:relative; }
+.noc-profile-toggle { display:flex; align-items:center; gap:8px; min-height:34px; padding:0 0 0 7px; color:#486262; background:transparent; border:0; font-size:12px; font-weight:700; }
+.noc-profile-toggle:hover, .noc-profile-toggle[aria-expanded="true"] { color:#008d85; }
+.noc-profile-toggle:focus-visible { outline:none; box-shadow:0 0 0 3px #04a99f26; border-radius:6px; }
+.noc-profile-toggle > svg:first-child { width:21px; height:21px; padding:4px; color:#04a99f; background:#e2f7f4; border-radius:50%; }
+.noc-profile-toggle > svg:last-child { width:14px; height:14px; color:#8aa09e; }
+.noc-profile-panel { position:absolute; z-index:32; top:calc(100% + 10px); right:0; display:grid; width:184px; padding:5px; background:#fff; border:1px solid #dceae7; border-radius:10px; box-shadow:0 16px 36px #2544431f; }
+.noc-profile-panel > a, .noc-profile-panel > button { display:flex; align-items:center; gap:8px; width:100%; min-height:35px; padding:0 9px; color:#526b6e; background:#fff; border:0; border-radius:6px; font-size:11px; font-weight:700; text-align:left; text-decoration:none; }
+.noc-profile-panel > a:hover { background:#f1f8f7; }
+.noc-profile-panel > button { color:#b64e4a; }
+.noc-profile-panel > button:hover { background:#fff5f4; }
+.noc-profile-panel svg { width:15px; height:15px; }
+.noc-profile-panel-rule { height:1px; margin:4px 3px; background:#e7efed; }
+
+@media (max-width: 580px) {
+  .noc-login-page { padding:22px 18px; }
+  .noc-login-card { padding:24px 22px; }
+  .noc-profile-toggle > span, .noc-profile-toggle > svg:last-child { display:none; }
+  .noc-profile-toggle { padding:0; }
+  .noc-profile-toggle > svg:first-child { width:32px; height:32px; padding:7px; }
+  .noc-profile-panel { position:fixed; top:59px; right:12px; left:12px; width:auto; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .noc-sidebar, .noc-nav-link { transition:none; }
+  .noc-nav-link:hover { transform:none; }
+}
+
+/* Reserve a dedicated header lane for the drawer close control. */
+@media (max-width: 820px) {
+  .noc-sidebar-close {
+    top: 14px;
+    right: 12px;
+    width: 44px;
+    height: 44px;
+    z-index: 1;
+  }
+
+  .noc-brand {
+    gap: 6px;
+    min-height: 58px;
+    padding: 5px 64px 17px 9px;
+  }
+
+  .noc-brand-mark {
+    width: 30px;
+    height: 35px;
+  }
+
+  .noc-brand-wordmark {
+    width: 94px;
+  }
+
+  .noc-brand > strong {
+    padding-left: 6px;
+    font-size: 9px;
+    letter-spacing: 0.1em;
+  }
+}
+
+/* PerumNet Hotspot admin login — presentation-only, scoped to /login. */
+.hotspot-login-page {
+  --hotspot-teal: #08aaa0;
+  --hotspot-teal-dark: #078d85;
+  --hotspot-ink: #314f52;
+  --hotspot-muted: #7c8e91;
+  --hotspot-line: #dce5e4;
+  display: grid;
+  min-height: 100dvh;
+  padding: 44px 20px;
+  place-items: center;
+  overflow-x: clip;
+  background:
+    radial-gradient(circle at 50% 33%, #dff6f2 0, transparent 31%),
+    #f4fbfa;
+}
+
+.hotspot-login-wrap {
+  width: min(100%, 456px);
+}
+
+.hotspot-login-brand {
+  display: grid;
+  height: 112px;
+  margin-bottom: 28px;
+  place-items: center;
+}
+
+.hotspot-login-lockup {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.hotspot-login-mark {
+  display: block;
+  width: 48px;
+  height: 56px;
+  object-fit: contain;
+}
+
+.hotspot-login-wordmark {
+  display: block;
+  width: 180px;
+  height: 24px;
+  object-fit: contain;
+}
+
+.hotspot-login-brand > span {
+  margin-top: 7px;
+  color: #91a3a5;
+  font-family: var(--font-perumnet-body), "DM Sans", Arial, sans-serif;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 1.7px;
+  line-height: 1.1;
+}
+
+.hotspot-login-card {
+  padding: 32px;
+  background: #fff;
+  border: 1px solid #dfeae8;
+  border-radius: 17px;
+  box-shadow: 0 22px 50px #2b4b4b1a;
+}
+
+.hotspot-login-icon {
+  display: grid;
+  width: 48px;
+  height: 48px;
+  place-items: center;
+  color: var(--hotspot-teal);
+  background: #e1f7f4;
+  border-radius: 13px;
+}
+
+.hotspot-login-icon svg {
+  width: 25px;
+  height: 25px;
+}
+
+.hotspot-login-card h1 {
+  margin: 24px 0 0;
+  color: var(--hotspot-ink);
+  font-family: var(--font-perumnet-heading), "Plus Jakarta Sans", Arial, sans-serif;
+  font-size: 25px;
+  font-weight: 800;
+  letter-spacing: -0.8px;
+  line-height: 1.25;
+}
+
+.hotspot-login-card > p {
+  margin: 8px 0 28px;
+  color: var(--hotspot-muted);
+  font-family: var(--font-perumnet-body), "DM Sans", Arial, sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.5;
+}
+
+.hotspot-login-form {
+  gap: 17px;
+  font-family: var(--font-perumnet-body), "DM Sans", Arial, sans-serif;
+}
+
+.hotspot-login-form [data-slot="label"] {
+  color: #536c70;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+.hotspot-login-form [data-slot="input"] {
+  min-height: 48px;
+  padding: 13px 14px;
+  color: #536c70;
+  background: #fff;
+  border-color: var(--hotspot-line);
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 14px;
+}
+
+.hotspot-login-form [data-slot="input"]::placeholder {
+  color: #9aa9ab;
+  opacity: 1;
+}
+
+.hotspot-login-form [data-slot="input"]:focus-visible {
+  border-color: var(--hotspot-teal);
+  outline: none;
+  box-shadow: 0 0 0 3px #04a99f18;
+}
+
+.hotspot-login-form [data-slot="button"] {
+  width: 100%;
+  min-height: 48px;
+  margin-top: 2px;
+  color: #fff;
+  background: var(--hotspot-teal);
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.hotspot-login-form [data-slot="button"]:hover {
+  background: var(--hotspot-teal-dark);
+}
+
+.hotspot-login-form [data-slot="button"]:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px #04a99f2e;
+}
+
+.hotspot-login-footer {
+  margin: 24px 0 0;
+  color: #74878a;
+  font-family: var(--font-perumnet-body), "DM Sans", Arial, sans-serif;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.5;
+  text-align: center;
+}
+
+@media (max-width: 760px) {
+  .hotspot-login-page {
+    padding: 30px 14px;
+  }
+
+  .hotspot-login-brand {
+    height: 98px;
+    margin-bottom: 22px;
+  }
+
+  .hotspot-login-mark {
+    width: 42px;
+    height: 50px;
+  }
+
+  .hotspot-login-wordmark {
+    width: 154px;
+    height: 21px;
+  }
+
+  .hotspot-login-brand > span {
+    margin-top: 6px;
+    font-size: 8px;
+    letter-spacing: 1.5px;
+  }
+
+  .hotspot-login-card {
+    padding: 26px 24px;
+  }
+
+  .hotspot-login-footer {
+    margin-top: 20px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hotspot-login-form [data-slot="button"] {
+    transition: none;
   }
 }
 

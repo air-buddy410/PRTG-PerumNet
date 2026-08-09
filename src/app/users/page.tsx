@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import UserTable from "@/components/users/user-table";
 
 export const metadata: Metadata = {
-  title: "Manajemen Pengguna — PerumNet",
+  title: "Manajemen Pengguna • PerumNet NOC",
   description: "Daftar pengguna aplikasi beserta peran RBAC PerumNet.",
 };
 

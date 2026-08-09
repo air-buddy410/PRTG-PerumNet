@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import ReportsView from "@/components/reports/reports-view";
 
 export const metadata: Metadata = {
-  title: "Laporan Jaringan — PerumNet",
+  title: "Laporan Jaringan • PerumNet NOC",
   description:
     "Laporan ketersediaan SLA dan penggunaan trafik dengan ekspor PDF/Excel.",
 };

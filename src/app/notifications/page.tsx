@@ -4,7 +4,7 @@ import NotificationHistory from "@/components/notifications/notification-history
 import RegisterChannelForm from "@/components/notifications/register-channel-form";
 
 export const metadata: Metadata = {
-  title: "Notifikasi Cepat — PerumNet",
+  title: "Notifikasi Cepat • PerumNet NOC",
   description:
     "Pengaturan channel alert WhatsApp/Telegram dan riwayat notifikasi monitoring.",
 };

@@ -70,7 +70,7 @@ export default function RegisterForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+    <form onSubmit={handleSubmit} className="noc-login-form flex flex-col gap-4">
       <div className="space-y-1.5">
         <Label htmlFor="name">Nama Lengkap</Label>
         <Input

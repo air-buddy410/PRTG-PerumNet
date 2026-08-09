@@ -8,17 +8,43 @@ import { db } from "@/db";
 import { user } from "@/db/auth-schema";
 import { auth } from "@/server/auth";
 
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? "admin@perumnet.co.id";
+const DEFAULT_ADMIN_EMAIL = "admin@perumnet.id";
+const LEGACY_DEFAULT_ADMIN_EMAIL = "admin@perumnet.co.id";
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? DEFAULT_ADMIN_EMAIL;
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD ?? "perumnet123";
 const ADMIN_NAME = process.env.ADMIN_NAME ?? "Admin NOC";
 
 export async function ensureAdminUser() {
   const [existingAdmin] = await db
-    .select({ id: user.id })
+    .select({ id: user.id, email: user.email })
     .from(user)
     .where(eq(user.role, "admin"))
     .limit(1);
-  if (existingAdmin) return;
+
+  // Migrasi aman untuk instalasi lokal yang sebelumnya memakai default lama.
+  // Nilai ADMIN_EMAIL eksplisit selalu menang dan tidak pernah ditimpa otomatis.
+  if (existingAdmin) {
+    const shouldMigrateLegacyDefault =
+      !process.env.ADMIN_EMAIL &&
+      existingAdmin.email === LEGACY_DEFAULT_ADMIN_EMAIL;
+
+    if (shouldMigrateLegacyDefault) {
+      const [existingNewEmail] = await db
+        .select({ id: user.id })
+        .from(user)
+        .where(eq(user.email, DEFAULT_ADMIN_EMAIL))
+        .limit(1);
+
+      if (!existingNewEmail) {
+        await db
+          .update(user)
+          .set({ email: DEFAULT_ADMIN_EMAIL })
+          .where(eq(user.id, existingAdmin.id));
+        console.log(`[bootstrap] email Admin NOC diperbarui: ${DEFAULT_ADMIN_EMAIL}`);
+      }
+    }
+    return;
+  }
 
   const [existingByEmail] = await db
     .select({ id: user.id })

@@ -4,7 +4,7 @@ import ProfileForm from "@/components/profile/profile-form";
 import SessionList from "@/components/profile/session-list";
 
 export const metadata: Metadata = {
-  title: "Profil Saya — PerumNet",
+  title: "Profil Saya • PerumNet NOC",
   description: "Kelola data profil dan keamanan akun PerumNet Anda.",
 };
 

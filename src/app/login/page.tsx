@@ -1,32 +1,54 @@
 import type { Metadata } from "next";
 import Image from "next/image";
+import { LogIn } from "lucide-react";
 import LoginForm from "@/components/auth/login-form";
 
 export const metadata: Metadata = {
-  title: "Masuk — PerumNet",
-  description: "Masuk ke dashboard monitoring jaringan PerumNet.",
+  title: "Login • PerumNet NOC",
+  description: "Masuk ke PerumNet Hotspot & Captive Portal Management System.",
 };
 
 export default function LoginPage() {
   return (
-    <main className="flex min-h-dvh items-center justify-center px-4 py-10">
-      <div className="w-full max-w-sm">
-        <div className="mb-6 text-center">
-          <Image
-            src="/brand/perumnet-logo.png"
-            alt="PerumNet"
-            width={132}
-            height={184}
-            priority
-            className="mx-auto"
-          />
-          <p className="mt-1 text-sm text-muted-foreground">
-            Masuk ke dashboard monitoring NOC
-          </p>
+    <main className="hotspot-login-page">
+      <div className="hotspot-login-wrap">
+        <div className="hotspot-login-brand">
+          <div className="hotspot-login-lockup">
+            <Image
+              src="/brand/perumnet-mark.png"
+              alt=""
+              width={48}
+              height={56}
+              priority
+              className="hotspot-login-mark"
+            />
+            <Image
+              src="/brand/perumnet-wordmark.png"
+              alt="PerumNet"
+              width={180}
+              height={24}
+              priority
+              className="hotspot-login-wordmark"
+            />
+          </div>
+          <span>MONITORING NOC</span>
         </div>
-        <div className="rounded-lg border bg-card px-6 py-6 shadow-lg">
+        <section
+          className="hotspot-login-card"
+          aria-labelledby="hotspot-login-title"
+        >
+          <div className="hotspot-login-icon" aria-hidden="true">
+            <LogIn />
+          </div>
+          <h1 id="hotspot-login-title">
+            Masuk Ke PerumNet Monitoring NOC System
+          </h1>
+          <p>Monitoring NOC Management System</p>
           <LoginForm />
-        </div>
+        </section>
+        <p className="hotspot-login-footer">
+          © 2026 PerumNet. All Rights Reserved.
+        </p>
       </div>
     </main>
   );

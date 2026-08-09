@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import DeviceDetail from "@/components/devices/device-detail";
 
 export const metadata: Metadata = {
-  title: "Monitor Detail Perangkat — PerumNet",
+  title: "Monitor Detail Perangkat • PerumNet NOC",
   description:
     "Detail metrik perangkat jaringan: CPU, RAM, bandwidth, dan kesehatan optik.",
 };

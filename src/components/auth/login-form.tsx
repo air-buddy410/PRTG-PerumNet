@@ -1,16 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { CircleAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ApiError, sendJson } from "@/lib/api/http";
-
-// Akun bootstrap bawaan (lihat src/server/bootstrap-admin.ts).
-const DEMO_HINT = "admin@perumnet.co.id / perumnet123";
 
 export default function LoginForm() {
   const router = useRouter();
@@ -40,32 +36,40 @@ export default function LoginForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+    <form
+      onSubmit={handleSubmit}
+      className="hotspot-login-form flex flex-col"
+    >
       <div className="space-y-1.5">
-        <Label htmlFor="email">Email</Label>
+        <Label htmlFor="email">Username atau Email</Label>
         <Input
           id="email"
           type="email"
+          autoComplete="email"
           required
-          placeholder="nama@perumnet.co.id"
+          placeholder="nama@email.com"
           value={email}
           onChange={(event) => setEmail(event.target.value)}
         />
       </div>
       <div className="space-y-1.5">
-        <Label htmlFor="password">Kata Sandi</Label>
+        <Label htmlFor="password">Password</Label>
         <Input
           id="password"
           type="password"
+          autoComplete="current-password"
           required
-          placeholder="••••••••"
+          placeholder="Masukkan password"
           value={password}
           onChange={(event) => setPassword(event.target.value)}
         />
       </div>
 
       {error && (
-        <p className="flex items-start gap-1.5 rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-xs text-destructive">
+        <p
+          role="alert"
+          className="flex items-start gap-1.5 rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-xs text-destructive"
+        >
           <CircleAlert className="mt-0.5 size-3.5 shrink-0" aria-hidden />
           {error}
         </p>
@@ -74,16 +78,6 @@ export default function LoginForm() {
       <Button type="submit" disabled={loading} className="mt-1">
         {loading ? "Memeriksa…" : "Masuk"}
       </Button>
-
-      <p className="text-center text-xs text-muted-foreground">
-        Belum punya akun?{" "}
-        <Link href="/register" className="text-foreground hover:underline">
-          Daftar
-        </Link>
-      </p>
-      <p className="rounded-md border border-dashed px-3 py-2 text-center text-[11px] text-muted-foreground">
-        Demo: {DEMO_HINT}
-      </p>
     </form>
   );
 }

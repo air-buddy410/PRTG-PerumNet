@@ -3,7 +3,7 @@ import MapLegend from "@/components/map/map-legend";
 import MapView from "@/components/map/map-view";
 
 export const metadata: Metadata = {
-  title: "Peta Sebaran Jaringan — PerumNet",
+  title: "Peta Sebaran Jaringan • PerumNet NOC",
   description:
     "Peta GIS sebaran perangkat jaringan PerumNet dengan status real-time.",
 };

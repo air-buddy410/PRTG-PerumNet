@@ -5,7 +5,7 @@ export const MOCK_USERS: AppUser[] = [
   {
     id: "usr-01",
     name: "Budi Dharma",
-    email: "admin@perumnet.co.id",
+    email: "admin@perumnet.id",
     role: "admin",
     status: "active",
     createdAt: "2026-05-02T09:00:00+07:00",

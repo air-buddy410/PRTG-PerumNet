@@ -5,7 +5,7 @@ import NetworkActivity from "@/components/dashboard/network-activity";
 import LastUpdated from "@/components/last-updated";
 
 export const metadata: Metadata = {
-  title: "Dasbor NOC — PerumNet",
+  title: "Dashboard • PerumNet NOC",
   description:
     "Wallboard NOC PerumNet: ringkasan kesehatan jaringan real-time untuk layar besar ruang kontrol.",
 };

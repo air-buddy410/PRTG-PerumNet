@@ -1,4 +1,10 @@
+import type { Metadata } from "next";
 import DeviceList from "@/components/dashboard/device-list";
+
+export const metadata: Metadata = {
+  title: "Perangkat Jaringan • PerumNet NOC",
+  description: "Pantau status seluruh perangkat jaringan PerumNet.",
+};
 
 export default function DevicesPage() {
   return (

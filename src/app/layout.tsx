@@ -1,30 +1,30 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { DM_Sans, Plus_Jakarta_Sans } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
 import NocShell from "@/components/layout/noc-shell";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const dmSans = DM_Sans({
   subsets: ["latin"],
+  variable: "--font-perumnet-body",
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const plusJakartaSans = Plus_Jakarta_Sans({
   subsets: ["latin"],
+  variable: "--font-perumnet-heading",
 });
 
 export const metadata: Metadata = {
-  title: "PerumNet — Monitoring Jaringan",
+  title: "PerumNet NOC",
   description:
     "Dashboard monitoring jaringan PerumNet untuk NOC ISP.",
-  manifest: "/manifest.webmanifest",
-  icons: {
-    icon: [
-      { url: "/favicon.ico", sizes: "any" },
+    manifest: "/manifest.webmanifest",
+    icons: {
+      icon: [
+      { url: "/favicon.ico", type: "image/x-icon", sizes: "32x32" },
       { url: "/brand/perumnet-mark-192.png", type: "image/png", sizes: "192x192" },
       { url: "/brand/perumnet-mark-512.png", type: "image/png", sizes: "512x512" },
-    ],
+      ],
     apple: "/apple-icon.png",
   },
 };
@@ -34,7 +34,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html
       lang="id"
       suppressHydrationWarning
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${dmSans.variable} ${plusJakartaSans.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
         <ThemeProvider
